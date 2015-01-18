@@ -9,7 +9,7 @@ rshell is a c++ shell coded using unix. For now, there is only basic shell funct
 * Comment recognition
 * Exit functionality
 
-##How to use
+##How to use (SHELL DOES NOT WORK YET)
 Simply run the main.cpp located inside src. This will open up the shell.
 
 ##Prerequisites
