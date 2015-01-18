@@ -1,0 +1,39 @@
+Working Test Cases for rshell
+
+```
+cd
+cd -as
+cd -notvalid
+notvalid
+
+-as
+
+cd ; ls
+cd && ls
+cd || ls
+cd -as; ls
+cd -as && ls
+cd -as || ls
+ cd
+    cd
+;
+notvalid; ls
+notvalid && ls
+notvalid || ls
+cd &&
+#
+#this is a comment
+ #this is a comment
+cd #this is a comment
+cd -as #this is a comment
+notvalid #this is a comment
+#cd
+# cd
+#   cd
+exit
+cd exit
+cd; exit
+cd && exit
+notvalid; exit
+notvalid || exit
+```
