@@ -1,23 +1,38 @@
 #include <iostream>
 #include <unistd.h>
-#include <stduo.h>
+#include <stdio.h>
 
 using namespace std;
 
-int main(char* argc, char** argv)
+void runCommand()
 {
-    char* command;
-    pch = strtok (command," ");
-    //int pid = fork();
+   // if (execvp(cmd, argv)!= 0)
+     //   perror("error in execvp");
 
-    while(command != "exit")
+}
+
+int main(int argc, char* argv[])
+{
+    char* command = "ls -as";
+    char* pch;
+
+    do
     {
         //Retrieve command
-        cout >> "$ ";
-        cin >> command;
-    }
-    if (execvp(cmd, argv)!= 0)
-        perror("error in execvp");
+        cout << "$ ";
+        getline(cin, command);
+
+        //tokenize command
+        pch = strtok(command," ");
+        while(pch != NULL)
+        {
+            cout << pch << endl;
+            pch = strtok(NULL, " ");
+        }
+
+    } while (command != "exit");
+
+    return 0;
 }
 
 
