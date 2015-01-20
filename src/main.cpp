@@ -4,6 +4,9 @@
 
 using namespace std;
 
+//set to false if shell should exit
+bool RUNPROGRAM = true;
+
 void runCommand()
 {
    // if (execvp(cmd, argv)!= 0)
@@ -11,26 +14,54 @@ void runCommand()
 
 }
 
+//returns true of snippet is a comment
+bool checkComment(char* snip)
+{
+	//do something if these special characters are found
+	char key[] = "#";
+	char* schar;
+
+	schar = strpbrk (snip, key);
+	if (schar != NULL)
+	{
+		return true;
+	}
+	return false;
+}
+
+void checkConnector(char* snip)
+{
+
+}
+
 int main(int argc, char* argv[])
 {
-    char* command = "ls -as";
-    char* pch;
-
+	//user input command
+    char command[256];
+	//snippet of entire command
+    char* snip;
+	
     do
     {
         //Retrieve command
         cout << "$ ";
-        getline(cin, command);
+        cin.getline(command, 256);
 
-        //tokenize command
-        pch = strtok(command," ");
-        while(pch != NULL)
+        //Split command
+        snip = strtok(command, " ");
+        while(snip != NULL)
         {
-            cout << pch << endl;
-            pch = strtok(NULL, " ");
+			cout << snip << endl;
+			
+			if (snip == "exit")
+				RUNPROGRAM = false;
+			else if (checkComment(snip))
+				cout << "comment" << endl;
+			
+            snip = strtok(NULL, " ");
         }
 
-    } while (command != "exit");
+    } while (RUNPROGRAM);
 
     return 0;
 }
