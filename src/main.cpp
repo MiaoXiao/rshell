@@ -3,16 +3,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <vector>
 
 using namespace std;
-
-//set to true to ignore rest of command
-bool IGNORE = false;
 
 //run this command given these parameters
 //returns whether this operation succeeded or not
 bool runCommand(char* executable, char argumentList[], int connector, bool lastOperation)
 {
+    cout << "Running Command " << executable << endl;
 	/*
 	pid = fork();
 	if (execvp(command, argv)!= 0)
@@ -83,6 +82,18 @@ int checkConnector(char* snip)
     return -1;
 }
 
+//changes vector of char* to a char* array
+char* finishArgList(vector<char*> v)
+{
+    char* argumentListc[v.size()];
+    for (int i = 0, j = 0; i < v.size(); i++, j++)
+    {
+        argumentListc[j] = v[i];
+        argumentListc[++j] =  '\0';
+    }
+    return *argumentListc;
+}
+
 int main(int argc, char* argv[])
 {
 	//user input command
@@ -91,52 +102,67 @@ int main(int argc, char* argv[])
 	char* snip;
 	//executable
 	char* executable = NULL;
-	//argument list
-	char* argumentList;
 	//whether the last operation failed or not
     int connectorFlag = -1;
+    //whether the last operation was succeeeded(true) or not(false)
 	bool lastOperation = true;
 
 	do
 	{
-	    	//keep track of whether you are checking executable, argument, or connector
+	    	//keep track of whether you are checking executable or argument
 	    	// 0 is executable, 1 is argument
-	        int count = 0;
+	        int statement = 0;
 	        //keep track of size in argument list. resets every command.
 	        int argumentListCount = 0;
+            //vector for all arguments
+            vector<char*> argumentList;
 
 	        //Retrieve command
 	        cout << "$ ";
 	        cin.getline(command, 256);
 
-            //fix command, add any neccessary spaces to seperate statements
+            //partition command, add any neccessary spaces to seperate statements
             fixCommand(command);
 
 	        //Tokenize command
 	        snip = strtok(command, " ");
 
-	        //Iterate until entire command is parsed and partitioned
+	        //Iterate until entire command is parsed
             while(snip != NULL)
 	        {
 			    //exit shell if input is "exit"
 		        if (strcmp(snip, "exit") == 0)
 			    	return 0;
 
-			    //if snippet is connector, RUN COMMAND with parameters:
-
-			    //otherwise, init variable with the executable, argument, or connector
+			    //init variable with the executable, argument, or connector
 			    //1. if executable, simply init executable
-			    //2. if argument, add to argument array and increment argument list counter
+			    //2. if argument, add to argument array and increment argument list statementer
+                //3. connector, run the current command with runCommand
                 connectorFlag = checkConnector(snip);
-
+                if (statement == 0)
+                {
+                    executable = snip;
+                    statement++;
+                }
+                else if (statement == 1)
+                {
+                    argumentList.push_back(snip);
+                }
+                else if (connectorFlag != -1)
+                {
+                    //create char array that matches the argument list vector
+                    //save whether that operation succeeded or failed
+                    char* argumentListc = finishArgList(argumentList);
+                    lastOperation = runCommand(executable, argumentListc, connectorFlag, lastOperation);
+                    statement = 0;
+                }
 			    //move to next snippet
 			    snip = strtok(NULL, " ");
 	        }
 
 	//RUN command if last snippet was NOT a connector
-
 	argumentListCount= 0;
-	count = 0;
+	statement = 0;
 
 	} while (1);
 
