@@ -68,6 +68,21 @@ void fixCommand(char* command)
     strcpy(command, fixedCommand);
 }
 
+//checks whether the given snip is a connector
+//returns -1 if not a connector
+//returns 0, 1, 2 if it is a ; || or &&
+int checkConnector(char* snip)
+{
+    if (snip == ";")
+        return 0;
+    else if (snip == "||")
+        return 1;
+    else if (snip == "&&")
+        return 2;
+
+    return -1;
+}
+
 int main(int argc, char* argv[])
 {
 	//user input command
@@ -79,6 +94,7 @@ int main(int argc, char* argv[])
 	//argument list
 	char* argumentList;
 	//whether the last operation failed or not
+    int connectorFlag = -1;
 	bool lastOperation = true;
 
 	do
@@ -108,14 +124,15 @@ int main(int argc, char* argv[])
 
 			    //if snippet is connector, RUN COMMAND with parameters:
 
-			    //otherwise, init variable with the executable or argument.
+			    //otherwise, init variable with the executable, argument, or connector
 			    //1. if executable, simply init executable
 			    //2. if argument, add to argument array and increment argument list counter
-
+                connectorFlag = checkConnector(snip);
 
 			    //move to next snippet
 			    snip = strtok(NULL, " ");
 	        }
+
 	//RUN command if last snippet was NOT a connector
 
 	argumentListCount= 0;
