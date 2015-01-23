@@ -10,12 +10,17 @@
 using namespace std;
 
 //run this command given these parameters
-//returns whether this operation succeeded or not
-bool runCommand(char* executable, char* argumentList[], int connector, bool lastOperation)
+//returns whether this operation succeeded or not based off the connector
+bool runCommand(char* executable, char* argumentList[], int connector)
 {
-    cout << "Running Command..." << executable << endl;
+    int status;
+    bool operationSuccess;
+    //check if you should possibly run a command or not
+    //Potentially run command only if there is no connector, the connector is a ;
+
     int pid = fork();
-    if (pid == -1) //error
+
+    if (pid <= -1) //error
     {
         perror("There was an error with fork().");
         exit(1);
@@ -24,18 +29,36 @@ bool runCommand(char* executable, char* argumentList[], int connector, bool last
     {
         if (execvp(executable, argumentList) == -1)
             perror("There was an error with the executable or argument list.");
+
         exit(1);
     }
     else if (pid > 0) //parent
     {
-        if (wait(0) == -1)
-            perror("There was an error with wait().");
+        int result = waitpid(pid, &status, 0);
+
+        if (result == -1)
+            perror("Error with waitpid");
     }
+
+    //cout << "Status: " << status << endl;
+    if ((status == 0 && connector == 1) ||
+        (status > 0 && connector == 2))
+    {
+        operationSuccess = false;
+        //cout << "Operation failed" << endl;
+    }
+    else
+    {
+        operationSuccess = true;
+        //cout << "Operation success" << endl;
+    }
+
+    return operationSuccess;
 }
+
 
 //look through command and seperate all statements by spaces
 //if there is a # ignore every character after it
-//returns the fixed command
 void fixCommand(char* command)
 {
     char* fixedCommand;
@@ -96,43 +119,60 @@ int checkConnector(char* snip)
     return -1;
 }
 
+//displays char array
+void displayCharArray(char* a[])
+{
+    for (int i = 0; a[i] != NULL; i++)
+    {
+        cout << i << ": " << a[i] << endl;
+    }
+}
+/*
 //changes vector of char* to a char* array
 char** finishArgList(vector<char*> v)
 {
     cout << "Argument List" << endl;
-    char** argumentListc = new char*[v.size()];
+    char** argumentListc = new char*[v.size() + 1];
     for (int i = 0, j = 0; i < v.size(); i++, j++)
     {
-        argumentListc[i] = v[i];
+        argumentListc[i] = v[i].snipc;
         cout << i << ": " << argumentListc[i] << endl;
     }
+
+    argumentListc[v.size()] = '\0';
     return argumentListc;
 }
+*/
+
 
 int main(int argc, char* argv[])
 {
 	//user input command
-	char command[256];
-	//snippet of entire command
-	char* snip;
-	//executable
-	char* executable = NULL;
+	char command[50000];
+    //snippet of the command
+    char* snip;
 	//whether the last operation failed or not
     int connectorFlag = -1;
-    //whether the last operation  succeeeded(true) or not(false)
+    //whether the last operation succeeeded(true) or not(false)
 	bool lastOperation = true;
+    //whether you should terminate parsing a command early or not
+    bool continueParsing = true;
+    //vector for all arguments
+    char* argumentListc[50000];
+    //arg list position
+    int argpos = 0;
+    //keep track of whether you are checking executable or argument
+    // 0 is executable, 1 is argument
+    int statement = 0;
 
 	do
 	{
-	    	//keep track of whether you are checking executable or argument
-	    	// 0 is executable, 1 is argument
-	        int statement = 0;
-            //vector for all arguments
-            vector<char*> argumentList;
+            lastOperation = true;
+            continueParsing = true;
 
 	        //Retrieve command
 	        cout << "$ ";
-	        cin.getline(command, 256);
+	        cin.getline(command, 50000);
 
             //partition command, add any neccessary spaces to seperate statements
             fixCommand(command);
@@ -141,14 +181,13 @@ int main(int argc, char* argv[])
 	        snip = strtok(command, " ");
 
 	        //Iterate until entire command is parsed
-            while(snip != NULL)
+            while(snip != NULL && continueParsing)
 	        {
 			    //init variable with the executable, argument, or connector
 			    //1. if executable, simply init executable
 			    //2. if argument, add to argument array and increment argument list statementer
-
                 //3. connector, run the current command with runCommand
-                // cout << "Snip:" << snip << endl;
+                //cout << "Snip:" << snip << endl;
                 connectorFlag = checkConnector(snip);
                 //cout << connectorFlag << endl;
                 if (statement == 0 && connectorFlag == -1)
@@ -157,26 +196,30 @@ int main(int argc, char* argv[])
 		            if (strcmp(snip, "exit") == 0)
 			    	    return 0;
 
-                    executable = snip;
-                    argumentList.push_back(snip);
+                    argumentListc[argpos] = snip;
+                    argpos++;
                     statement++;
-                    cout << "Parsed executable" << endl;
+                    //cout << "Parsed executable" << endl;
                 }
                 else if (statement == 1 && connectorFlag == -1)
                 {
-                    argumentList.push_back(snip);
-                    cout << "Parsed argument" << endl;
+                    argumentListc[argpos] = snip;
+                    argpos++;
+                    //cout << "Parsed argument" << endl;
                 }
                 else if (connectorFlag != -1)
                 {
                     //create char array that matches the argument list vector
                     //save whether that operation succeeded or failed
-                    char** argumentListc = finishArgList(argumentList);
-                    lastOperation = runCommand(executable, argumentListc, connectorFlag, lastOperation);
+                    argumentListc[argpos] = '\0';
+                    //displayCharArray(argumentListc);
+                    //cout << "Connector: " << connectorFlag << endl;
+                    lastOperation = runCommand(argumentListc[0], argumentListc, connectorFlag);
                     statement = 0;
-                    argumentList.clear();
-                    delete[] argumentListc;
-                    cout << "Parsed connector and ran command" << endl;
+                    argpos = 0;
+                    if (!lastOperation)
+                        continueParsing = false;
+
                 }
                 else
                 {
@@ -186,12 +229,11 @@ int main(int argc, char* argv[])
 			    snip = strtok(NULL, " ");
                 if (connectorFlag == -1 && snip == NULL)
                 {
-                    char** argumentListc = finishArgList(argumentList);
-                    lastOperation = runCommand(executable, argumentListc, connectorFlag, lastOperation);
+                    argumentListc[argpos] = '\0';
+                    //displayCharArray(argumentListc);
+                    lastOperation = runCommand(argumentListc[0], argumentListc, connectorFlag);
                     statement = 0;
-                    argumentList.clear();
-                    delete[] argumentListc;
-                    cout << "Parsed connector and ran command" << endl;
+                    argpos = 0;
                 }
 
 	        }
