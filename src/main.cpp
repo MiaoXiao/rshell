@@ -9,6 +9,8 @@
 
 using namespace std;
 
+int MEMORY = 50000;
+
 //run this command given these parameters
 //returns whether this operation succeeded or not based off the connector
 bool runCommand(char* executable, char* argumentList[], int connector)
@@ -57,7 +59,7 @@ bool runCommand(char* executable, char* argumentList[], int connector)
 //if there is a # ignore every character after it
 void fixCommand(char* command)
 {
-    char* fixedCommand;
+    char* fixedCommand =(char*)malloc(MEMORY);
     //j keeps track of position in fixed Command
     //i keeps track of position in command
     for (int i = 0, j = 0; command[i] != '\0'; ++i, ++j)
@@ -144,14 +146,13 @@ int main(int argc, char* argv[])
 
 	do
 	{
-            lastOperation = true;
             continueParsing = true;
             statement = 0;
             argpos = 0;
 
 	        //Retrieve command
 	        cout << "$ ";
-	        cin.getline(command, 50000);
+	        cin.getline(command, MEMORY);
 
             //partition command, add any neccessary spaces to seperate statements
             fixCommand(command);
@@ -199,11 +200,9 @@ int main(int argc, char* argv[])
                 {
                     argumentListc[argpos] = '\0';
                     //displayCharArray(argumentListc);
-                    lastOperation = runCommand(argumentListc[0], argumentListc, connectorFlag);
+                    runCommand(argumentListc[0], argumentListc, connectorFlag);
                 }
-
 	        }
-
 	} while (1);
 
     return 0;
