@@ -33,9 +33,7 @@ bool runCommand(char* executable, char* argumentList[], int connector)
     }
     else if (pid > 0) //parent
     {
-        int result = waitpid(pid, &status, 0);
-
-        if (result == -1)
+        if (waitpid(pid, &status, 0) == -1)
             perror("Error with waitpid");
     }
 
@@ -128,6 +126,11 @@ void displayCharArray(char* a[])
 
 int main(int argc, char* argv[])
 {
+    //info for login and host
+    char* host = (char*)malloc(5000);
+    string user = getlogin();
+    gethostname(host, 5000);
+
 	//user input command
 	char command[50000];
     //snippet of the command
@@ -151,7 +154,7 @@ int main(int argc, char* argv[])
             argpos = 0;
 
 	        //Retrieve command
-	        cout << "$ ";
+	        cout << user << "@" << host << "$ ";
 	        cin.getline(command, MEMORY);
 
             //partition command, add any neccessary spaces to seperate statements
