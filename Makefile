@@ -1,5 +1,13 @@
-VPATH = src
+COMPILER = g++
+CFLAGS = -Wall -Werror -ansi -pedantic
+FILEPATH = ./src/main.cpp
+OUTPATH = ./bin/rshell
+
 all:
-	g++ -Wall -Werror -ansi -pedantic src/main.cpp
+	mkdir -p ./bin
+	$(COMPILER) $(CFLAGS) $(FILEPATH) -o $(OUTPATH)
 rshell:
-	g++ -Wall -Werror -ansi -pedantic src/main.cpp
+	mkdir -p ./bin
+	$(COMPILER) $(CFLAGS) $(FILEPATH) -o $(OUTPATH)
+clean:
+	rm -rf ./bin

@@ -8,12 +8,28 @@ rshell is a c++ shell coded using unix. For now, there is only basic shell funct
 * Connector recognition
 * Comment recognition
 * Exit functionality
+* User and host computer recognition
 
-##How to use (SHELL DOES NOT WORK YET)
-Simply run the main.cpp located inside src. This will open up the shell.
+Combining multiple functions is possible, of course.
+
+##How to use
+You can compile rshell with:
+
+``make``
+
+In the root directory. This will create a bin file with the rshell executable.
+To run the executable from the root directory, run:
+
+``bin/rshell``
+
+To clean the bin file if you want to recompile rshell:
+
+``make clean``
 
 ##Prerequisites
 SDL library is required.
 
 ##Bugs
-They are probably everywhere.
+Future bugs will be documented here.
+
+*Any command over 50,000 characters will crash the shell.
