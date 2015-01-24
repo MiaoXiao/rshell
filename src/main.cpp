@@ -5,7 +5,6 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <vector>
 
 using namespace std;
 
@@ -16,19 +15,19 @@ int MEMORY = 50000;
 bool runCommand(char* executable, char* argumentList[], int connector)
 {
     int status;
-    bool operationSuccess;
+
     //check if you should possibly run a command or not
     //Decide if you should run the next command
     int pid = fork();
     if (pid <= -1) //error
     {
-        perror("There was an error with fork().");
+        perror("There was an error with fork()");
         exit(1);
     }
     else if (pid == 0) //child
     {
         if (execvp(executable, argumentList) == -1)
-            perror("There was an error with the executable or argument list.");
+            perror("There was an error with the executable or argument list");
         exit(1);
     }
     else if (pid > 0) //parent
@@ -38,19 +37,7 @@ bool runCommand(char* executable, char* argumentList[], int connector)
     }
 
     //cout << "Status: " << status << endl;
-    if ((status == 0 && connector == 1) ||
-        (status > 0 && connector == 2))
-    {
-        operationSuccess = false;
-        //cout << "Operation failed" << endl;
-    }
-    else
-    {
-        operationSuccess = true;
-        //cout << "Operation success" << endl;
-    }
-
-    return operationSuccess;
+    return (!(status == 0 && connector == 1) || (status > 0 && connector == 2));
 }
 
 //look through command and seperate all statements by spaces
@@ -124,12 +111,26 @@ void displayCharArray(char* a[])
     }
 }
 
+//checks for any special built in commands and runs them
+void checkBuiltInCommand(char* snip)
+{
+    if (!strcmp(snip, "exit")) //terminates shell
+        exit(1);
+}
+
 int main(int argc, char* argv[])
 {
     //info for login and host
-    char* host = (char*)malloc(5000);
-    string user = getlogin();
-    gethostname(host, 5000);
+    char* host = (char*)malloc(300);
+    string user;
+    //error checking
+    if (getlogin() != NULL)
+        user = getlogin();
+    else
+        perror("Error with getting user");
+
+    if (gethostname(host, 300) == -1)
+        perror("Error with getting host name");
 
 	//user input command
 	char command[50000];
@@ -154,7 +155,7 @@ int main(int argc, char* argv[])
             argpos = 0;
 
 	        //Retrieve command
-	        cout << user << "@" << host << "$ ";
+	        cout << user << "@" << host << " $ ";
 	        cin.getline(command, MEMORY);
 
             //partition command, add any neccessary spaces to seperate statements
@@ -171,9 +172,8 @@ int main(int argc, char* argv[])
                 //cout << connectorFlag << endl;
                 if (statement == 0 && connectorFlag == -1)
                 {
-                    //exit shell if input is "exit"
-		            if (strcmp(snip, "exit") == 0)
-			    	    return 0;
+                    //possibly run any special commands
+                    checkBuiltInCommand(snip);
 
                     argumentListc[argpos] = snip;
                     argpos++;
@@ -199,6 +199,7 @@ int main(int argc, char* argv[])
 
 			    //move to next snippet
 			    snip = strtok(NULL, " ");
+                //check if this is the last command to run
                 if (connectorFlag == -1 && snip == NULL)
                 {
                     argumentListc[argpos] = '\0';
