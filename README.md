@@ -27,7 +27,10 @@ To clean the bin file if you want to recompile rshell:
 ``make clean``
 
 ##Prerequisites
-SDL library is required. A c++ compiler is also required.
+
+* C++ Compiler
+* SDL Library
+* Linux OS
 
 ##Bugs
 Future bugs will be documented here.
@@ -41,4 +44,4 @@ Limitations of rshell.
 * Any hostname over 300 characters will overflow the hostname buffer.
 But really, you should consider having a shorter hostname in that case.
 * Piping is not avaliable.
-* ``cd`` does not work.
+* ``cd`` is not avaliable.

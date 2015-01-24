@@ -5,6 +5,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include "Kirb.h"
 
 using namespace std;
 
@@ -40,7 +41,7 @@ bool runCommand(char* executable, char* argumentList[], int connector)
     return (!(status == 0 && connector == 1) || (status > 0 && connector == 2));
 }
 
-//look through command and seperate all statements by spaces
+//look through command and separate all statements by spaces
 //if there is a # ignore every character after it
 void fixCommand(char* command)
 {
@@ -131,7 +132,9 @@ int main(int argc, char* argv[])
 
     if (gethostname(host, 300) == -1)
         perror("Error with getting host name");
-
+	
+	//class for handling kirb's expression
+	Kirb kirb;
 	//user input command
 	char command[50000];
     //snippet of the command
@@ -155,10 +158,10 @@ int main(int argc, char* argv[])
             argpos = 0;
 
 	        //Retrieve command
-	        cout << user << "@" << host << " $ ";
+	        cout << user << "@" << host << kirb.expression;
 	        cin.getline(command, MEMORY);
 
-            //partition command, add any neccessary spaces to seperate statements
+            //partition command, add any necessary spaces to separate statements
             fixCommand(command);
 
 	        //Tokenize command
