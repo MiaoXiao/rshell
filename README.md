@@ -32,8 +32,7 @@ SDL library is required. A c++ compiler is also required.
 ##Bugs
 Future bugs will be documented here.
 
-* ``cd`` does not work.
-* Piping is not avaliable.
+* Adding tabs in a command might make executables that should pass, fail.
 
 ##Limitations
 Limitations of rshell.
@@ -41,3 +40,5 @@ Limitations of rshell.
 * Any command over 50,000 characters will overflow the command buffer.
 * Any hostname over 300 characters will overflow the hostname buffer.
 But really, you should consider having a shorter hostname in that case.
+* Piping is not avaliable.
+* ``cd`` does not work.

@@ -162,7 +162,7 @@ int main(int argc, char* argv[])
             fixCommand(command);
 
 	        //Tokenize command
-	        snip = strtok(command, " ");
+	        snip = strtok(command, "\t ");
 
 	        //Iterate until entire command is parsed
             while(snip != NULL && continueParsing)

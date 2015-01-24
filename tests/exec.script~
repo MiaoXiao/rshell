@@ -1,43 +1,116 @@
-Working Test Cases for rshell
-
-```
-cd
-cd -as
-cd -
-cd -notvalid
-notvalid
-
--as
-cd ; ls
-cd && ls
-cd || ls
-cd -as; ls
-cd -as && ls
-cd -as || ls
- cd;
-;
-notvalid; ls
-notvalid && ls
-notvalid || ls
-cd; notvalid
-cd && notvalid
-cd || notvalid
-cd;
-cd &&
-cd ||
-#
-#this is a comment
- #this is a comment
-cd #this is a comment
-cd -as #this is a comment
-notvalid #this is a comment
-#cd
+Script started on Fri 23 Jan 2015 11:17:35 PM PST
+~
+rfeng001@hammer $ cd CS100
+~/CS100
+rfeng001@hammer $ cd rshell
+~/CS100/rshell
+rfeng001@hammer $ make clear[Kn
+rm -rf ./bin
+~/CS100/rshell
+rfeng001@hammer $ make
+mkdir -p ./bin
+g++ -Wall -Werror -ansi -pedantic ./src/main.cpp -o ./bin/rshell
+~/CS100/rshell
+rfeng001@hammer $ bin/rshell
+rfeng001@hammer.cs.ucr.edu $ ls #executable
+a.out  bin  LICENSE  Makefile  Makefile~  README.md  README.md~  src  tests
+rfeng001@hammer.cs.ucr.edu $ ls -l #1 argu      argument
+total 64
+-rwx------ 1 rfeng001 classes 13707 Jan 23 08:40 a.out
+drwx------ 2 rfeng001 classes  4096 Jan 23 23:14 bin
+-rw------- 1 rfeng001 classes 18027 Jan 17 20:00 LICENSE
+-rw------- 1 rfeng001 classes   268 Jan 23 18:46 Makefile
+-rw------- 1 rfeng001 classes   285 Jan 23 18:45 Makefile~
+-rw------- 1 rfeng001 classes  1042 Jan 23 20:11 README.md
+-rw------- 1 rfeng001 classes  1042 Jan 23 20:11 README.md~
+drwx------ 2 rfeng001 classes  4096 Jan 23 23:07 src
+drwx------ 2 rfeng001 classes  4096 Jan 23 23:14 tests
+rfeng001@hammer.cs.ucr.edu $ ls -l -l -l -l -l -l -l -l -l -l -l -l -l -l -l -l -l -l -l -lllllll #many arguments
+total 64
+-rwx------ 1 rfeng001 classes 13707 Jan 23 08:40 a.out
+drwx------ 2 rfeng001 classes  4096 Jan 23 23:14 bin
+-rw------- 1 rfeng001 classes 18027 Jan 17 20:00 LICENSE
+-rw------- 1 rfeng001 classes   268 Jan 23 18:46 Makefile
+-rw------- 1 rfeng001 classes   285 Jan 23 18:45 Makefile~
+-rw------- 1 rfeng001 classes  1042 Jan 23 20:11 README.md
+-rw------- 1 rfeng001 classes  1042 Jan 23 20:11 README.md~
+drwx------ 2 rfeng001 classes  4096 Jan 23 23:07 src
+drwx------ 2 rfeng001 classes  4096 Jan 23 23:14 tests
+rfeng001@hammer.cs.ucr.edu $ ls -l      ls        -l      -l  
+total 64
+-rwx------ 1 rfeng001 classes 13707 Jan 23 08:40 a.out
+drwx------ 2 rfeng001 classes  4096 Jan 23 23:14 bin
+-rw------- 1 rfeng001 classes 18027 Jan 17 20:00 LICENSE
+-rw------- 1 rfeng001 classes   268 Jan 23 18:46 Makefile
+-rw------- 1 rfeng001 classes   285 Jan 23 18:45 Makefile~
+-rw------- 1 rfeng001 classes  1042 Jan 23 20:11 README.md
+-rw------- 1 rfeng001 classes  1042 Jan 23 20:11 README.md~
+drwx------ 2 rfeng001 classes  4096 Jan 23 23:07 src
+drwx------ 2 rfeng001 classes  4096 Jan 23 23:14 tests
+rfeng001@hammer.cs.ucr.edu $ 	ls -l	-l #tabs and spaces
+ls: invalid option -- '	'
+Try `ls --help' for more information.
+rfeng001@hammer.cs.ucr.edu $ -l ls #switch argument and executable
+There was an error with the executable or argument list: No such file or directory
+rfeng001@hammer.cs.ucr.edu $ bad #invalid executable
+There was an error with the executable or argument list: No such file or directory
+rfeng001@hammer.cs.ucr.edu $ ls ad  bad #invalid argument
+ls: cannot access bad: No such file or directory
+rfeng001@hammer.cs.ucr.edu $ 	ls	-l		-l
+ls: invalid option -- '	'
+Try `ls --help' for more information.
+rfeng001@hammer.cs.ucr.edu $ ls                
+a.out  bin  LICENSE  Makefile  Makefile~  README.md  README.md~  src  tests
+rfeng001@hammer.cs.ucr.edu $ ; #incorrr ect usage of co onnector
+rfeng001@hammer.cs.ucr.edu $ true ; ls #; connector
+a.out  bin  LICENSE  Makefile  Makefile~  README.md  README.md~  src  tests
+rfeng001@hammer.cs.ucr.edu $ false ; ls #; connector
+a.out  bin  LICENSE  Makefile  Makefile~  README.md  README.md~  src  tests
+rfeng001@hammer.cs.ucr.edu $ true || ls #|| connector
+rfeng001@hammer.cs.ucr.edu $ false || ls #|| connector
+a.out  bin  LICENSE  Makefile  Makefile~  README.md  README.md~  src  tests
+rfeng001@hammer.cs.ucr.edu $ true && ls #&& connector
+a.out  bin  LICENSE  Makefile  Makefile~  README.md  README.md~  src  tests
+rfeng001@hammer.cs.ucr.edu $ false && ls #&& connector
+a.out  bin  LICENSE  Makefile  Makefile~  README.md  README.md~  src  tests
+rfeng001@hammer.cs.ucr.edu $ true; ls -a #uneven space
+.  ..  a.out  bin  .git  LICENSE  Makefile  Makefile~  README.md  README.md~  src  tests
+rfeng001@hammer.cs.ucr.edu $ true ;ls -a #uneven space
+.  ..  a.out  bin  .git  LICENSE  Makefile  Makefile~  README.md  README.md~  src  tests
+rfeng001@hammer.cs.ucr.edu $ true	 ; ls
+a.out  bin  LICENSE  Makefile  Makefile~  README.md  README.md~  src  tests
+rfeng001@hammer.cs.ucr.edu $ ls #this comment works!
+a.out  bin  LICENSE  Makefile  Makefile~  README.md  README.md~  src  tests
+rfeng001@hammer.cs.ucr.edu $ ls# this comment still works!
+a.out  bin  LICENSE  Makefile  Makefile~  README.md  README.md~  src  tests
+rfeng001@hammer.cs.ucr.edu $ ls#nothing can stop this comment!
+a.out  bin  LICENSE  Makefile  Makefile~  README.md  README.md~  src  tests
+rfeng001@hammer.cs.ucr.edu $ 	 # ls  tabs and spaces with comment
+rfeng001@hammer.cs.ucr.edu $ # ls   			  	 tabs and spaces after comment
+rfeng001@hammer.cs.ucr.edu $ ls ; ls&& false || ls # ; ls this should only ls 3 times!
+a.out  bin  LICENSE  Makefile  Makefile~  README.md  README.md~  src  tests
+a.out  bin  LICENSE  Makefile  Makefile~  README.md  README.md~  src  tests
+a.out  bin  LICENSE  Makefile  Makefile~  README.md  README.md~  src  tests
+rfeng001@hammer.cs.ucr.edu $ ls;&&||ls #many connectors together
+a.out  bin  LICENSE  Makefile  Makefile~  README.md  README.md~  src  tests
+a.out  bin  LICENSE  Makefile  Makefile~  README.md  README.md~  src  tests
+rfeng001@hammer.cs.ucr.edu $ |||||| #only 3 connectors
+rfeng001@hammer.cs.ucr.edu $ exit #leave termin      shell
+~/CS100/rshell
+rfeng001@hammer $ bin/rshell
+rfeng001@hammer.cs.ucr.edu $ true || exit #do not exit
+rfeng001@hammer.cs.ucr.edu $ false || exit #do exit
+~/CS100/rshell
+rfeng001@hammer $ bin/rshell
+rfeng001@hammer.cs.ucr.edu $ #exit   do not exit!
+rfeng001@hammer.cs.ucr.edu $ exit# exit! , even though there is a comment next to "exit"
+~/CS100/rshell
+rfeng001@hammer $ bin/rshell
+rfeng001@hammer.cs.ucr.edu $ bin/rshell #run rshell in rshell
+rfeng001@hammer.cs.ucr.edu $ exit # to prove that i   it                       exit #to prove that            prove i am running rshell within rshell
+rfeng001@hammer.cs.ucr.edu $ exit #  
+~/CS100/rshell
+rfeng001@hammer $ exit
 exit
-cd exit
-cd; exit
-cd && exit
-notvalid; exit
-notvalid || exit
 
-
-```
+Script done on Fri 23 Jan 2015 11:29:14 PM PST
