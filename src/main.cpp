@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
-#include <sys/wait.h>
+//#include <sys/wait.h>
 #include "Kirb.h"
 
 using namespace std;
@@ -13,30 +13,34 @@ int MEMORY = 50000;
 
 //run this command given these parameters
 //returns whether this operation succeeded or not based off the connector
-bool runCommand(char* executable, char* argumentList[], int connector)
+bool runCommand(char* executable, char* argumentList[], int connector, Kirb K)
 {
-    int status;
-
-    //check if you should possibly run a command or not
-    //Decide if you should run the next command
-    int pid = fork();
-    if (pid <= -1) //error
-    {
-        perror("There was an error with fork()");
-        exit(1);
-    }
-    else if (pid == 0) //child
-    {
-        if (execvp(executable, argumentList) == -1)
-            perror("There was an error with the executable or argument list");
-        exit(1);
-    }
-    else if (pid > 0) //parent
-    {
-        if (waitpid(pid, &status, 0) == -1)
-            perror("Error with waitpid");
-    }
-
+	int status;
+	//check for kirb executable
+	if (!strcmp(executable, "kirb"))
+		K.selectCommand(argumentList, status);
+	else
+	{
+		//check if you should possibly run a command or not
+		//Decide if you should run the next command
+		int pid = fork();
+		if (pid <= -1) //error
+		{
+			perror("There was an error with fork()");
+			exit(1);
+		}
+		else if (pid == 0) //child
+		{
+			if (execvp(executable, argumentList) == -1)
+				perror("There was an error with the executable or argument list");
+			exit(1);
+		}
+		else if (pid > 0) //parent
+		{
+			if (waitpid(pid, &status, 0) == -1)
+				perror("Error with waitpid");
+		}
+	}
     //cout << "Status: " << status << endl;
     return (!(status == 0 && connector == 1) || (status > 0 && connector == 2));
 }
@@ -112,12 +116,7 @@ void displayCharArray(char* a[])
     }
 }
 
-//checks for any special built in commands and runs them
-void checkBuiltInCommand(char* snip)
-{
-    if (!strcmp(snip, "exit")) //terminates shell
-        exit(1);
-}
+
 
 int main(int argc, char* argv[])
 {
@@ -134,7 +133,7 @@ int main(int argc, char* argv[])
         perror("Error with getting host name");
 	
 	//class for handling kirb's expression
-	Kirb kirb;
+	Kirb K;
 	//user input command
 	char command[50000];
     //snippet of the command
@@ -158,7 +157,7 @@ int main(int argc, char* argv[])
             argpos = 0;
 
 	        //Retrieve command
-	        cout << user << "@" << host << kirb.expression;
+	        cout << user << "@" << host << K.displayExpression();
 	        cin.getline(command, MEMORY);
 
             //partition command, add any necessary spaces to separate statements
@@ -176,7 +175,8 @@ int main(int argc, char* argv[])
                 if (statement == 0 && connectorFlag == -1)
                 {
                     //possibly run any special commands
-                    checkBuiltInCommand(snip);
+					if (!strcmp(snip, "exit")) //terminates shell
+						exit(1);
 
                     argumentListc[argpos] = snip;
                     argpos++;
@@ -196,7 +196,7 @@ int main(int argc, char* argv[])
                     argumentListc[argpos] = '\0';
                     statement = 0;
                     argpos = 0;
-                    if(!runCommand(argumentListc[0], argumentListc, connectorFlag))
+                    if(!runCommand(argumentListc[0], argumentListc, connectorFlag, K))
                         continueParsing = false;
                 }
 
@@ -207,7 +207,7 @@ int main(int argc, char* argv[])
                 {
                     argumentListc[argpos] = '\0';
                     //displayCharArray(argumentListc);
-                    runCommand(argumentListc[0], argumentListc, connectorFlag);
+                    runCommand(argumentListc[0], argumentListc, connectorFlag, K);
                 }
 	        }
 	} while (1);
