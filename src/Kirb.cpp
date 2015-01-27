@@ -75,7 +75,7 @@ void Kirb::changeExpression(unsigned int face)
 			break;
 		//crying
 		case 4:
-			expression = "(>;.:)>";
+			expression = "(>;.;)>";
 			break;
 		//confused
 		case 5:

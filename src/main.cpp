@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
-//#include <sys/wait.h>
+#include <sys/wait.h>
 #include "Kirb.h"
 
 using namespace std;
@@ -157,7 +157,7 @@ int main(int argc, char* argv[])
             argpos = 0;
 
 	        //Retrieve command
-	        cout << user << "@" << host << K.displayExpression();
+	        cout << user << "@" << host << K.displayExpression() << " ";
 	        cin.getline(command, MEMORY);
 
             //partition command, add any necessary spaces to separate statements

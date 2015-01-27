@@ -9,7 +9,7 @@ class Kirb
 		std::string expression;
 	public:
 		Kirb()
-			:expression("(>'.')>"), name("Kirb"){}
+			: name("Kirb"), expression("(>'.')>"){}
 		//select a kirb command
 		void selectCommand(char* argumentList[], int &status);
 		//feeding specific food changes Kirb's expression and gives other special effects
