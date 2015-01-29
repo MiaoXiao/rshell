@@ -7,7 +7,7 @@ OUTPATH2 = ./bin/Kirb.o
 
 all:
 	mkdir -p ./bin
-	$(COMPILER) $(CFLAGS) $(FILEPATH) $(FILEPATH2) -o $(OUTPATH)   
+	$(COMPILER) $(CFLAGS) $(FILEPATH) $(FILEPATH2) -o $(OUTPATH)  
 rshell:
 	mkdir -p ./bin
 	$(COMPILER) $(CFLAGS) $(FILEPATH) -o $(OUTPATH)

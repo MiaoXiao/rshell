@@ -13,7 +13,7 @@ int MEMORY = 50000;
 
 //run this command given these parameters
 //returns whether this operation succeeded or not based off the connector
-bool runCommand(char* executable, char* argumentList[], int connector, Kirb K)
+bool runCommand(char* executable, char* argumentList[], int connector, Kirb &K)
 {
 	int status;
 	//check for kirb executable
@@ -157,7 +157,7 @@ int main(int argc, char* argv[])
             argpos = 0;
 
 	        //Retrieve command
-	        cout << user << "@" << host << K.displayExpression() << " ";
+	        cout << user << "@" << host << " " << K.displayExpression() << " ";
 	        cin.getline(command, MEMORY);
 
             //partition command, add any necessary spaces to separate statements
