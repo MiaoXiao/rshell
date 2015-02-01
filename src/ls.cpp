@@ -4,11 +4,32 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <cstdlib>
-#include <iostream>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <string.h>
 #include <vector>
+#include <iostream>
+
 
 using namespace std;
+
+//displays files
+//checks flags vector for anything extra
+void displayls(dirent* filename, const vector<bool> flags)
+{
+	//if -a flag is not set, do not ls that file
+	if (filename->d_name[0] != '.' || flags[0])
+	{
+		//check for potential -l flag
+		if (flags[1])
+		{
+
+		}
+		//display name
+		cout << filename->d_name << endl; 	
+
+	}
+}
 
 //checks for possible path
 //returns false if the first character was a -
@@ -84,8 +105,7 @@ int main(int argc, char *argv[])
 		//initalize potential path
 		if (checkPath(argv[i]))
 		{
-			//cout << "path assigned" << endl;
-			strcpy(argv[i], dirName);	
+			strcpy(dirName, argv[i]);	
 			i++;
 		}
 
@@ -99,12 +119,14 @@ int main(int argc, char *argv[])
 		}
 		//displayFlags(flags);
 	}
-	//else, run normal ls
+	//if argc is 1, run normal ls
 
 	//error check opendir
 	if (opendir(dirName) == NULL)
+	{
 		perror("Error with opendir()");
-
+		exit(1);
+	}
 	//open directory and assign pointer
 	DIR *dirp = opendir(dirName);	
 	dirent *direntp;
@@ -114,9 +136,10 @@ int main(int argc, char *argv[])
 		//error check readdir
 		if (direntp < 0)
 			perror("Error with readdir()");
+	
+		//list files
+		displayls(direntp, flags);
 
-		cout << direntp->d_name << endl; // use stat here to find attributes of file
-		
 		//error check closedir
 		//if (closedir(dirp) != 0)
 		//	perror("Error with closedir()");
