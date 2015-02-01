@@ -116,8 +116,6 @@ void displayCharArray(char* a[])
     }
 }
 
-
-
 int main(int argc, char* argv[])
 {
     //info for login and host

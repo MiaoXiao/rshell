@@ -9,30 +9,34 @@ using namespace std;
 
 void Kirb::selectCommand(char* argumentList[], int &status)
 {
-	kirbstatus = status;
+	kirbstatus = status;	
 	for (int i = 1; argumentList[i] != '\0'; i++)
 	{
 		string str(argumentList[i]);
 		sv.push_back(str);
 	}
 
-	if (sv.size() >= 2)
+	switch (sv.size())
 	{
-		//cout << "sv1: " << sv[0] << endl;
-		if (sv[0] == "feed")
-			feedFood(sv[1]);
-		else if (sv[0] == "changename")
-			changeName(sv[1]);
-		else
-		{
-			cout << "Invalid kirb command: that kirb function does not exist" << endl;
+		case(0):
+			cout << "Not enough arguments" << endl;
 			status = 1;
-		}
-	}
-	else
-	{
-		cout << "Invalid kirb command: not enough arguments" << endl;
-		status = 1;
+			break;
+		case(1):
+			cout << "Not enough arguments" << endl;
+			status = 1;
+			break;
+		case(2):
+			if (sv[0] == "feed")
+				feedFood(sv[1]);
+			else if (sv[0] == "changename")
+				changeName(sv[1]);
+			else
+			{
+				cout << "Invalid kirb command: that kirb function does not exist" << endl;
+				status = 1;
+			}
+			break;
 	}
 	
 	sv.clear();
@@ -53,22 +57,17 @@ void Kirb::feedFood(string food)
 		changeExpression(0);
 	else
 		changeExpression(5);
+	
+	kirbstatus = 0;
 }
 
 void Kirb::changeName(string newname)
 {
-	if (!newname.size())
-		cout << "Type \"kirb changename NAME\" to change " << name << "'s name." << endl;
-	else if (newname.size() > 20)
-		cout << name << " doesn't like long names! [New name should be 20 characters or less]" << endl;
-	else
-	{
-		cout << name << "'s name is now ";
-		name = newname; 
-		cout << newname << "!" << endl;
-	}
+	cout << name << "'s name is changed to ";
+	name = newname; 
+	cout << newname << "!" << endl;
 
-	sv.clear();
+	kirbstatus = 0;
 }
 
 void Kirb::changeExpression(unsigned int face)
@@ -102,6 +101,16 @@ void Kirb::changeExpression(unsigned int face)
 	}
 }
 
+void Kirb::dekirb()
+{
+	if (enable)
+		cout << "Kirb disabled" << endl;
+	else
+		cout << "Kirb enabled" << endl;
+	enable = !enable;
+	kirbstatus = 0;
+}
+
 string Kirb::displayExpression()
 {
 	return expression;
@@ -110,4 +119,9 @@ string Kirb::displayExpression()
 string Kirb::displayName()
 {
 	return name;
+}
+
+bool Kirb::showStatus()
+{
+	return enable;
 }

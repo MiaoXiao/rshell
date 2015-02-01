@@ -1,15 +1,20 @@
-COMPILER = g++
+GCC = g++
 CFLAGS = -Wall -Werror -ansi -pedantic
 FILEPATH = ./src/main.cpp
+FILEPATHLS = ./src/ls.cpp
 FILEPATH2 = ./src/Kirb.cpp
 OUTPATH = ./bin/rshell
+OUTPATHLS = ./bin/ls
 OUTPATH2 = ./bin/Kirb.o
 
-all:
+all: ls
 	mkdir -p ./bin
-	$(COMPILER) $(CFLAGS) $(FILEPATH) $(FILEPATH2) -o $(OUTPATH)  
+	$(GCC) $(CFLAGS) $(FILEPATH) $(FILEPATH2) -o $(OUTPATH)  
 rshell:
 	mkdir -p ./bin
-	$(COMPILER) $(CFLAGS) $(FILEPATH) -o $(OUTPATH)
+	$(GCC) $(CFLAGS) $(FILEPATH) -o $(OUTPATH)
+ls:
+	mkdir -p ./bin
+	$(GCC) $(CFLAGS) $(FILEPATHLS) -o $(OUTPATHLS)
 clean:
 	rm -rf ./bin
