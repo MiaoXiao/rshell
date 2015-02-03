@@ -113,7 +113,7 @@ void displayFlags(const vector<bool> flags)
 //DEBUG: displays paths array
 void displayPaths(const vector<string> v)
 {
-	for (int i = 0; i < v.size(); i++) cout << i << ": " << v[i] << endl;
+	for (unsigned i = 0; i < v.size(); i++) cout << i << ": " << v[i] << endl;
 	if (!v.size()) cout << "paths vector empty" << endl;
 }
 
@@ -155,20 +155,16 @@ int main(int argc, char *argv[])
 	//displayPaths(paths);
     
 	//iterate through any directory in the path
-	for (int i = 0; i < paths.size(); i++)
+	for (unsigned i = 0; i < paths.size(); i++)
 	{
-		//convert string to c_str
-		char dirName[paths[i].size() + 1];
-		strncpy(dirName, paths[i].c_str(), paths[i].size());
-		
 		//error check opendir
-		if (opendir(dirName) == NULL)
+		if (opendir(paths[i].c_str()) == NULL)
 		{
 			perror("Error with opendir()");
 			exit(1);
 		}
 		//open directory and assign pointer
-		DIR *dirp = opendir(dirName);	
+		DIR *dirp = opendir(paths[i].c_str());	
 		dirent *direntp;
 		
 		//show directory name if multiple paths
