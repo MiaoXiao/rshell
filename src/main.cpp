@@ -9,7 +9,7 @@
 
 using namespace std;
 
-int MEMORY = 50000;
+#define MEMORY 50000
 
 //run this command given these parameters
 //returns whether this operation succeeded or not based off the connector
@@ -17,8 +17,7 @@ bool runCommand(char* executable, char* argumentList[], int connector, Kirb &K)
 {
 	int status;
 	//check for kirb executable
-	if (!strcmp(executable, "kirb"))
-		K.selectCommand(argumentList, status);
+	if (!strcmp(executable, "kirb")) K.selectCommand(argumentList, status);
 	else
 	{
 		//check if you should possibly run a command or not
@@ -36,10 +35,7 @@ bool runCommand(char* executable, char* argumentList[], int connector, Kirb &K)
 			exit(1);
 		}
 		else if (pid > 0) //parent
-		{
-			if (waitpid(pid, &status, 0) == -1)
-				perror("Error with waitpid");
-		}
+			if (waitpid(pid, &status, 0) == -1)	perror("Error with waitpid");
 	}
     //cout << "Status: " << status << endl;
     return (!(status == 0 && connector == 1) || (status > 0 && connector == 2));
@@ -81,15 +77,12 @@ void fixCommand(char* command)
             fixedCommand[++j] = ' ';
             ++i;
         }
-        else
-        {
-            fixedCommand[j] = command[i];
-        }
+        else fixedCommand[j] = command[i];
 
-        if (command[i + 1] == '\0')
-            fixedCommand[j + 1] = '\0';
+        if (command[i + 1] == '\0') fixedCommand[j + 1] = '\0';
     }
     strcpy(command, fixedCommand);
+    free(fixedCommand);
 }
 
 //checks whether the given snip is a connector
@@ -97,13 +90,9 @@ void fixCommand(char* command)
 //returns 0, 1, 2 if it is a ; || or &&
 int checkConnector(char* snip)
 {
-    if (!strcmp(snip, ";"))
-        return 0;
-    else if (!strcmp(snip, "||"))
-        return 1;
-    else if (!strcmp(snip, "&&"))
-        return 2;
-
+    if (!strcmp(snip, ";")) return 0;
+    else if (!strcmp(snip, "||")) return 1;
+    else if (!strcmp(snip, "&&")) return 2;
     return -1;
 }
 
@@ -111,9 +100,7 @@ int checkConnector(char* snip)
 void displayCharArray(char* a[])
 {
     for (int i = 0; a[i] != NULL; i++)
-    {
         cout << i << ": " << a[i] << endl;
-    }
 }
 
 int main(int argc, char* argv[])
@@ -121,19 +108,16 @@ int main(int argc, char* argv[])
     //info for login and host
     char* host = (char*)malloc(300);
     string user;
-    //error checking
-    if (getlogin() != NULL)
-        user = getlogin();
-    else
-        perror("Error with getting user");
 
-    if (gethostname(host, 300) == -1)
-        perror("Error with getting host name");
+    //error checking
+    if (getlogin() != NULL) user = getlogin();
+    else perror("Error with getting user");
+    if (gethostname(host, 300) == -1) perror("Error with getting host name");
 	
 	//class for handling kirb's expression
 	Kirb K;
 	//user input command
-	char command[50000];
+	char command[MEMORY];
     //snippet of the command
     char* snip;
 	//whether the last operation failed or not
@@ -141,7 +125,7 @@ int main(int argc, char* argv[])
     //whether you should terminate parsing a command early or not
     bool continueParsing = true;
     //vector for all arguments
-    char* argumentListc[50000];
+    char* argumentListc[MEMORY];
     //arg list position
     int argpos = 0;
     //keep track of whether you are checking executable or argument
@@ -174,7 +158,10 @@ int main(int argc, char* argv[])
                 {
                     //possibly run any special commands
 					if (!strcmp(snip, "exit")) //terminates shell
+					{
+						free(host);
 						exit(1);
+					}
 
                     argumentListc[argpos] = snip;
                     argpos++;
@@ -194,8 +181,7 @@ int main(int argc, char* argv[])
                     argumentListc[argpos] = '\0';
                     statement = 0;
                     argpos = 0;
-                    if(!runCommand(argumentListc[0], argumentListc, connectorFlag, K))
-                        continueParsing = false;
+                    if(!runCommand(argumentListc[0], argumentListc, connectorFlag, K)) continueParsing = false;
                 }
 
 			    //move to next snippet
@@ -209,7 +195,6 @@ int main(int argc, char* argv[])
                 }
 	        }
 	} while (1);
-
     return 0;
 }
 
