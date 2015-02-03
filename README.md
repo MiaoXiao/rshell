@@ -13,17 +13,19 @@ rshell is a c++ shell coded using unix. For now, there is only basic shell funct
 Combining multiple functions is possible, of course.
 
 ## ls
-From the root directory, you can ls by typing:
+After compiling, you can ls by typing:
 
 ``bin/ls``
 
-You can also add optional parameters, such as the -a, -l, or -R flags. Currently, only the -a flag is functional.
+You can also add optional parameters, such as the -a, -l, or -R flags. Currently, only the -a flag and the -l is functional.
 
 ``bin/ls -a``
+``bin/ls -l``
 
 You can specify a directory to ls too, along with any optinal flags.
 
 ``bin/ls src -a``
+``bin/ls -a src -l .``
 
 ## Kirb
 Currently, there is very limited kirb functionality, which allows the user to care for a pet and see its status as you enter in commands. The command prompt will be replaced by everyones favorite cute looking puff ball.
@@ -49,19 +51,26 @@ You can also feed Kirb with the following commands:
 
 Feeding Kirb will change how Kirb looks onscreen. To reset back to Kirbs default look, just feed him water!
 
-More features will be added, and if I dont end up doing well on the next homework assignment, this is probably the reason why.
-
 ##How to use
-You can compile rshell with:
+You can compile rshell and ls with:
 
 ``make``
 
-In the root directory. This will create a bin file with the rshell executable.
+In the root directory. This will create a bin file with the rshell and ls executable.
+
+You can choose to specify compilation with:
+
+``make rshell``
+
+or:
+
+``make ls``
+
 To run the executable from the root directory, run:
 
 ``bin/rshell``
 
-To clean the bin file if you want to recompile rshell:
+To clean the bin file if you want to recompile rshell or ls:
 
 ``make clean``
 
@@ -74,7 +83,8 @@ To clean the bin file if you want to recompile rshell:
 ##Bugs
 Future bugs will be documented here.
 
-* Adding tabs in a command might make executables that should pass, fail.
+* In main.cpp. adding tabs in a command might make executables that should pass, fail.
+* In ls.cpp, Opendir() seems to allocate memory but does not deallocate it.
 
 ##Limitations
 Limitations of rshell.
@@ -82,5 +92,3 @@ Limitations of rshell.
 * Any command over 50,000 characters will overflow the command buffer.
 * Any hostname over 300 characters will overflow the hostname buffer.
 But really, you should consider having a shorter hostname in that case.
-* Piping is not avaliable.
-* ``cd`` is not avaliable.
