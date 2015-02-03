@@ -1,10 +1,13 @@
 #include <sys/types.h>
+#include <pwd.h>
+#include <grp.h>
 #include <dirent.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <cstdlib>
 #include <sys/stat.h>
+#include <linux/stat.h>
 #include <unistd.h>
 #include <time.h>
 #include <string.h>
@@ -35,6 +38,29 @@ string getMonth(unsigned monthnumber)
 	return "ERROR";
 }
 
+//returns string of file permissions
+string filePermission(mode_t m)
+{
+	string permissions = "---------- 1";
+	if (m & S_IRUSR) permissions[1] = 'r';
+	if (m & S_IWUSR) permissions[2] = 'w';
+	if (m & S_IXUSR) permissions[3] = 'x';
+	if (m & S_IRGRP) permissions[4] = 'r';
+	if (m & S_IWGRP) permissions[5] = 'w';
+	if (m & S_IXGRP) permissions[6] = 'x';
+	if (m & S_IROTH) permissions[7] = 'r';
+	if (m & S_IWOTH) permissions[8] = 'w';
+	if (m & S_IXOTH) permissions[9] = 'x';
+	
+	if (S_ISDIR(m))
+	{
+		permissions[0] = 'd';
+		permissions[11] = '2'; 
+	}
+
+	return permissions;
+}
+
 //displays files
 //checks flags vector for anything extra
 void displayls(dirent* filename, const vector<bool> flags)
@@ -55,16 +81,23 @@ void displayls(dirent* filename, const vector<bool> flags)
 				exit(1);
 			}
 
+			//file permissions and inode
+			cout << filePermission(info.st_mode) << "\t";
+
+			//user id
+			struct passwd userinfo = *getpwuid(info.st_uid);
+			cout << userinfo.pw_name << "\t";
+
+			//group id
+			struct group groupinfo = *getgrgid(info.st_gid);
+			cout << groupinfo.gr_name << "\t";
+
+			//size in bytes
+			cout << info.st_size << "\t";
+
 			//get time info
 			struct tm lastmodified;
 			lastmodified = *gmtime(&info.st_mtime);
-			
-			//user id
-			cout << info.st_uid << "\t";
-			//group id
-			cout << info.st_gid << "\t";
-			//size in bytes
-			cout << info.st_size << "\t";
 			//date of last modified
 			cout << getMonth(lastmodified.tm_mon) << " " << lastmodified.tm_mday <<  "\t";
 			//time of last modified
