@@ -12,6 +12,8 @@
 #include <time.h>
 #include <string.h>
 #include <cstring>
+#include <algorithm>
+#include <ctype.h>
 #include <vector>
 #include <iostream>
 
@@ -61,50 +63,53 @@ string filePermission(mode_t m)
 	return permissions;
 }
 
-//displays files
+//displays all files in a vector files
 //checks flags vector for anything extra
-void displayls(dirent* filename, const vector<bool> flags)
+void displayls(vector<string> filenames, const vector<bool> flags)
 {
-	//if -a flag is not set, do not ls a file that starts with . 
-	if (filename->d_name[0] != '.' || flags[0])
+	for (unsigned i = 0; i < filenames.size(); ++i)
 	{
-		//check for potential -l flag
-		if (flags[1])
+		//if -a flag is not set, do not ls a file that starts with . 
+		if (filenames[i].at(0) != '.' || flags[0])
 		{
-			//get -l info on
-			struct stat info;
-
-			//perror
-			if (stat(filename->d_name, &info) == -1)
+			//check for potential -l flag
+			if (flags[1])
 			{
-				perror("There was a problem with stat()");
-				exit(1);
+				//get -l info on
+				struct stat info;
+
+				//error check stat
+				if (stat(filenames[i].c_str(), &info) == -1)
+				{
+					perror("There was a problem with stat()");
+					exit(1);
+				}
+
+				//file permissions and inode
+				cout << filePermission(info.st_mode) << "\t";
+
+				//user id
+				struct passwd userinfo = *getpwuid(info.st_uid);
+				cout << userinfo.pw_name << "\t";
+
+				//group id
+				struct group groupinfo = *getgrgid(info.st_gid);
+				cout << groupinfo.gr_name << "\t";
+
+				//size in bytes
+				cout << info.st_size << "\t";
+
+				//get time info
+				struct tm lastmodified;
+				lastmodified = *gmtime(&info.st_mtime);
+				//date of last modified
+				cout << getMonth(lastmodified.tm_mon) << " " << lastmodified.tm_mday <<  "\t";
+				//time of last modified
+				cout << lastmodified.tm_hour << ":" << lastmodified.tm_min << "\t";
 			}
-
-			//file permissions and inode
-			cout << filePermission(info.st_mode) << "\t";
-
-			//user id
-			struct passwd userinfo = *getpwuid(info.st_uid);
-			cout << userinfo.pw_name << "\t";
-
-			//group id
-			struct group groupinfo = *getgrgid(info.st_gid);
-			cout << groupinfo.gr_name << "\t";
-
-			//size in bytes
-			cout << info.st_size << "\t";
-
-			//get time info
-			struct tm lastmodified;
-			lastmodified = *gmtime(&info.st_mtime);
-			//date of last modified
-			cout << getMonth(lastmodified.tm_mon) << " " << lastmodified.tm_mday <<  "\t";
-			//time of last modified
-			cout << lastmodified.tm_hour << ":" << lastmodified.tm_min << "\t";
+			//display name
+			cout << filenames[i] << endl; 	
 		}
-		//display name
-		cout << filename->d_name << endl; 	
 	}
 }
 
@@ -143,11 +148,21 @@ void displayFlags(const vector<bool> flags)
 	cout << "-R: " << flags[2] << endl;
 }
 
-//DEBUG: displays paths array
-void displayPaths(const vector<string> v)
+//DEBUG: displays vector of strings 
+void displayVector(const vector<string> v)
 {
-	for (unsigned i = 0; i < v.size(); i++) cout << i << ": " << v[i] << endl;
-	if (!v.size()) cout << "paths vector empty" << endl;
+	for (unsigned i = 0; i < v.size(); ++i) cout << i << ": " << v[i] << endl;
+	if (!v.size()) cout << "Vector empty" << endl;
+}
+
+//comparator for sort
+bool scompare(string a, string b)
+{
+	for (unsigned i = 0; i < a.size(); ++i)
+		a[i] = tolower(a[i]);
+	for (unsigned i = 0; i < b.size(); ++i)
+		b[i] = tolower(b[i]);
+	return a < b;
 }
 
 int main(int argc, char *argv[])
@@ -161,6 +176,9 @@ int main(int argc, char *argv[])
 	//container to hold paths
 	vector<string> paths;
 
+	//container to hold filenames for each directory
+	vector<string> filenames;
+
 	if (argc < 1) //error
 	{
 		cout << "Error opening file" << endl;
@@ -168,7 +186,7 @@ int main(int argc, char *argv[])
 	}
 	else if (argc > 1) //run ls with path or flags
 	{
-		for (int i = 1; i < argc; i++)
+		for (int i = 1; i < argc; ++i)
 		{
 			//check command to see if path, flag, or error.
 			//fills corresponding container
@@ -179,44 +197,49 @@ int main(int argc, char *argv[])
 				exit(1);
 			}
 		}
-		//displayFlags(flags);
 	}
-    
-	//if no paths were given, only use the default path
-	if (!paths.size()) paths.push_back(".");
-	
-	//displayPaths(paths);
-    
-	//iterate through any directory in the path
-	for (unsigned i = 0; i < paths.size(); i++)
+	//if no paths were given, use default path  	
+	if (!paths.size()) paths.push_back("."); 	
+
+	//displayVector(paths);
+	//displayFlags(flags);	
+
+	//create pointer to directory to be read
+	dirent *direntp;
+
+	//iterate through every path 
+	for (unsigned i = 0; i < paths.size(); ++i)
 	{
-		//error check opendir
-		if (opendir(paths[i].c_str()) == NULL)
-		{
-			perror("Error with opendir()");
-			exit(1);
-		}
-		//open directory and assign pointer
-		DIR *dirp = opendir(paths[i].c_str());	
-		dirent *direntp;
-		
 		//show directory name if multiple paths
 		if (paths.size() > 1) cout << paths[i] << ": " << endl;
-		    
+
+		//open directory and assign pointer
+		DIR *dirp = opendir(paths[i].c_str());
+		if (dirp == NULL) perror ("Error with opendir()");
+	
+		//fill filenames vector with all file names
 		while ((direntp = readdir(dirp)))
 		{
 			//error check readdir
 			if (direntp < 0) perror("Error with readdir()");
-			//list files
-			displayls(direntp, flags);
+			string s(direntp->d_name);
+			filenames.push_back(s);
 		}
 		
+		//alphabetize filenames
+		sort(filenames.begin(), filenames.end(), scompare);
+		//list files, based on file names
+		displayls(filenames, flags);
+
+		//close directory
 		if (closedir(dirp) == -1)
 		{
 			perror("Error with closedir()");
 			exit(1);
 		}
 		
+		filenames.clear();
+
 		//new line for next directory (except for last directory)
 		if (i + 1 != paths.size()) cout << endl;
 	}

@@ -15,7 +15,7 @@ using namespace std;
 //returns whether this operation succeeded or not based off the connector
 bool runCommand(char* executable, char* argumentList[], int connector, Kirb &K)
 {
-	int status;
+	int status = 1;
 	//check for kirb executable
 	if (!strcmp(executable, "kirb")) K.selectCommand(argumentList, status);
 	else
