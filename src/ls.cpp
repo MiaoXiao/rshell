@@ -107,7 +107,7 @@ void findallpaths(vector<string> &paths, string &pathsofar)
 */
 
 //returns number of hard links
-int findhardlinks(string dir, bool flaga)
+int findhardlinks(string dir)
 {
 	struct stat inodeinfo;
 	int numbhardlinks = 2;
@@ -132,27 +132,24 @@ int findhardlinks(string dir, bool flaga)
 
 		//cout << "file in dir: " << tdirentp->d_name << endl;
 
-		//check a flag
-		if (tdirentp->d_name[0] != '.' || flaga)
+		//insert path at start of string
+		string fileindir(tdirentp->d_name);
+
+		//make sure path included is not . or ..
+		if (fileindir != "." && fileindir != "..")
 		{
-			//insert path at start of string
-			string fileindir(tdirentp->d_name);
-			//make sure path is not . or ..
-			if (fileindir != "." && fileindir != "..")
+			fileindir.insert(0, dir + "/");
+			//error check stat
+			if (stat(fileindir.c_str(), &inodeinfo) == -1)
 			{
-				fileindir.insert(0, dir + "/");
-				//error check stat
-				if (stat(fileindir.c_str(), &inodeinfo) == -1)
-				{
-					perror("Error with stat()");
-					exit(1);
-				}
-				//if current file is a directory, increase number of hard links
-				if (S_ISDIR(inodeinfo.st_mode))
-				{
-					++numbhardlinks;
-				//	cout << endl <<  "file added: " << tdirentp->d_name << endl;
-				}
+				perror("Error with stat()");
+				exit(1);
+			}
+			//if current file is a directory, increase number of hard links
+			if (S_ISDIR(inodeinfo.st_mode))
+			{
+				++numbhardlinks;
+			//	cout << endl <<  "file added: " << tdirentp->d_name << endl;
 			}
 		}
 	}
@@ -196,7 +193,7 @@ void displayls(vector<string> filenames, const vector<bool> flags, string curren
 				cout << filePermission(info.st_mode) << "\t";
 
 				//inode number
-				(!S_ISDIR(info.st_mode)) ? cout << 1 : cout << findhardlinks(filenames[i], flags[0]);
+				(!S_ISDIR(info.st_mode)) ? cout << 1 : cout << findhardlinks(filenames[i]);
 				cout << "\t";
 
 				//user id

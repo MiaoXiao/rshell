@@ -1,5 +1,5 @@
 # Linux Shell for CS100
-## Shell Funcitonality
+## Shell Functionality
 
 rshell is a c++ shell coded using unix. For now, there is only basic shell functionality. This includes:
 
@@ -19,12 +19,10 @@ After compiling, you can ls by typing:
 
 You can also add optional parameters, such as the -a, -l, or -R flags. Currently, only the -a flag and the -l is functional.
 
-``bin/ls -a``
-``bin/ls -l``
+``bin/ls -a -l``
 
 You can specify a directory to ls too, along with any optinal flags.
 
-``bin/ls src -a``
 ``bin/ls -a src -l .``
 
 ## Kirb
