@@ -1,4 +1,5 @@
 #include <sys/types.h>
+#include <stack>
 #include <pwd.h>
 #include <grp.h>
 #include <dirent.h>
@@ -63,48 +64,6 @@ string filePermission(mode_t m)
 	
 	return permissions;
 }
-
-/*
-//fill paths vector with new paths based on -R flag
-void findallpaths(vector<string> &paths, string &pathsofar)
-{
-	//check if you must check only the . dir, or every dir
-	vector<string> recursepaths;
-	for (unsigned i = 0; i < paths.size(); ++i)
-	{
-		if (paths[i] == ".")
-		{
-			recursepaths.push_back(paths[i]);
-			i = paths.size();
-		}
-	}
-
-	//if no . directory found, recurse on all paths given
-	//if (!recursepaths.size()) recursepaths = paths;
-
-	//begin reursing through all possible directories
-	for (unsigned i = 0; i < paths.size(); ++i)
-	{
-		pathsofar = paths[i];
-
-		DIR *dirp = opendir(paths[i].c_str());
-		dirent *direntp;
-		struct stat info;
-		while((direntp = readdir(dirp)))
-		{
-			stat(direntp->d_name, &info);
-			if (S_ISDIR(info.st_mode))
-			{*
-				pathsofar += "/";
-				pathsofar.append(direntp->d_name);
-				findallpaths(paths, pathsofar);
-			}
-		}
-		closedir(dirp);	
-	}
-	
-}
-*/
 
 /*
 //returns number of hard links
@@ -186,14 +145,13 @@ string displayColorText(mode_t m, string filename)
 
 //displays all files in a vector files
 //checks flags vector for anything extra
-void displayls(vector<string> filenames, const vector<bool> flags, string currentpath)
+void displayls(vector<string> filenames, const vector<bool> flags, string currentpath, stack<string> &rdir)
 {
 	//struct for storing stat info
 	struct stat info;
 	//total number of blocks
 	int totalblocks = 0;
 	for (unsigned i = 0; i < filenames.size(); ++i)
-			
 	{
 		//cout << "Filename: " << filenames[i] << endl;	
 		//if -a flag is not set, do not ls a file that starts with . 
@@ -210,6 +168,15 @@ void displayls(vector<string> filenames, const vector<bool> flags, string curren
 			{
 				perror("Error with stat()");
 				exit(1);
+			}
+
+			//if -R flag and directory, and the filename is NOT . or ..,
+			//push into rdir stack
+			if (flags[2] && S_ISDIR(info.st_mode) && 
+				filenames[i] != "." && filenames[i] != "..") 
+			{
+				rdir.push(updatedpath);
+				cout << "Filenames: " << filenames[i] << endl;
 			}
 
 			//check for potential -l flag
@@ -339,19 +306,28 @@ int main(int argc, char *argv[])
 
 	//create pointer to directory to be read
 	dirent *direntp;
+	
+	//holds all dirs about to be processed
+	stack<string> rdir;
+	//current dir to be processed
+	string processdir;
 
-//	string pathsofar = "";
-	//if -R flag passed in, find all potential paths
-//	if (flags[2]) findallpaths(paths, pathsofar);
+	//push all paths from vector to a stack
+	for (unsigned i = 0; i < paths.size(); ++i) rdir.push(paths[i]);
 
-	//iterate through every path 
-	for (unsigned i = 0; i < paths.size(); ++i)
+	//while the stack of paths is not empty, ls files 
+	while (!rdir.empty())
 	{
-		//show directory name if multiple paths
-		if (paths.size() > 1) cout << paths[i] << ": " << endl;
+		//reassign dir about to be processed
+		processdir = rdir.top();
+		//remove directory that is about to be processed from stack
+		rdir.pop();
+		
+		//display directory about to ls
+		cout << processdir << ": " << endl;
 
 		//open directory and assign pointer
-		DIR *dirp = opendir(paths[i].c_str());
+		DIR *dirp = opendir(processdir.c_str());
 		if (dirp == NULL)
 		{
 			perror ("Error with opendir()");
@@ -373,9 +349,10 @@ int main(int argc, char *argv[])
 		
 		//alphabetize filenames
 		sort(filenames.begin(), filenames.end(), scompare);
-		//list files, based on flags, for the given path 
-		displayls(filenames, flags, paths[i]);
-
+		//list files, based on flags, for the given path
+		//if -R flag was passed, rdir may fill with additional paths
+		displayls(filenames, flags, processdir, rdir);
+		
 		//close directory
 		if (closedir(dirp) == -1)
 		{
@@ -383,9 +360,10 @@ int main(int argc, char *argv[])
 			exit(1);
 		}
 		
+		//clear processed filenames
 		filenames.clear();
 
-		//new line for next directory (except for last directory)
-		if (i + 1 != paths.size()) cout << endl;
+		//newline for every dir except last dir
+		if (!rdir.empty()) cout << endl;
 	}
 }

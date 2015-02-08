@@ -17,16 +17,17 @@ After compiling, you can ls by typing:
 
 ``bin/ls``
 
-You can also add optional parameters, such as the -a, -l, or -R flags. Currently, only the -a flag and the -l is functional.
+in the root directoy. You can also add optional parameters, such as the -a, -l, or -R flags. 
 
-``bin/ls -a -l``
+``bin/ls -a -l -R``
 
 You can specify a directory to ls too, along with any optinal flags.
 
 ``bin/ls -a src -l .``
 
 ## Kirb
-Currently, there is very limited kirb functionality, which allows the user to care for a pet and see its status as you enter in commands. The command prompt will be replaced by everyones favorite cute looking puff ball.
+Currently, there is very limited kirb functionality, which allows the user to care for a pet and see its status as you enter in commands. 
+The command prompt will be replaced by everyones favorite cute looking puff ball.
 It is as crazy as it sounds.
 
 By typing in:
@@ -64,7 +65,7 @@ or:
 
 ``make ls``
 
-To run the executable from the root directory, run:
+To run the executable from the root directory:
 
 ``bin/rshell``
 
@@ -82,7 +83,6 @@ To clean the bin file if you want to recompile rshell or ls:
 Future bugs will be documented here.
 
 * In main.cpp. adding tabs in a command might make executables that should pass, fail.
-* In ls.cpp, Opendir() seems to allocate memory but does not deallocate it.
 
 ##Limitations
 Limitations of rshell.
