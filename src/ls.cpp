@@ -106,7 +106,9 @@ void findallpaths(vector<string> &paths, string &pathsofar)
 }
 */
 
+/*
 //returns number of hard links
+//GOD DAMN IT I DIDINT HAVE TO DO THIS
 int findhardlinks(string dir)
 {
 	struct stat inodeinfo;
@@ -162,7 +164,7 @@ int findhardlinks(string dir)
 
 	return numbhardlinks;
 }
-
+*/
 string displayColorText(mode_t m, string filename)
 {
 	//cout << "filename: " << filename << endl;
@@ -188,7 +190,10 @@ void displayls(vector<string> filenames, const vector<bool> flags, string curren
 {
 	//struct for storing stat info
 	struct stat info;
+	//total number of blocks
+	int totalblocks = 0;
 	for (unsigned i = 0; i < filenames.size(); ++i)
+			
 	{
 		//cout << "Filename: " << filenames[i] << endl;	
 		//if -a flag is not set, do not ls a file that starts with . 
@@ -206,15 +211,15 @@ void displayls(vector<string> filenames, const vector<bool> flags, string curren
 				perror("Error with stat()");
 				exit(1);
 			}
+
 			//check for potential -l flag
 			if (flags[1])
 			{
 				//file permissionse
 				cout << filePermission(info.st_mode) << "\t";
 
-				//inode number
-				(!S_ISDIR(info.st_mode)) ? cout << 1 : cout << findhardlinks(filenames[i]);
-				cout << "\t";
+				//number of hard links
+				cout << info.st_nlink << "\t";
 
 				//user id
 				struct passwd userinfo = *getpwuid(info.st_uid);
@@ -231,11 +236,16 @@ void displayls(vector<string> filenames, const vector<bool> flags, string curren
 				string timeinfo = ctime(&info.st_mtime);
 				//only display, date and time modified
 				cout << timeinfo.substr(4, 12) << "\t";
+
+				//get blocks for this file
+				totalblocks += info.st_blocks;
 			}
 			//display name
 			cout << displayColorText(info.st_mode, filenames[i]) << endl;
 		}
 	}
+	//display total blocks only if  -l flag is passed
+	if (flags[1]) cout << "Total blocks: " << totalblocks / 2 << endl;
 }
 
 //parses commands to find flags, fills flags vector
