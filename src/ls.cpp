@@ -94,7 +94,7 @@ void findallpaths(vector<string> &paths, string &pathsofar)
 		{
 			stat(direntp->d_name, &info);
 			if (S_ISDIR(info.st_mode))
-			{
+			{*
 				pathsofar += "/";
 				pathsofar.append(direntp->d_name);
 				findallpaths(paths, pathsofar);
@@ -163,6 +163,25 @@ int findhardlinks(string dir)
 	return numbhardlinks;
 }
 
+string displayColorText(mode_t m, string filename)
+{
+	//cout << "filename: " << filename << endl;
+	string color = "39";
+	string bg = "49";
+	//color
+	if (S_ISDIR(m)) color = "34"; 
+	else if (m & S_IXUSR) color =  "32";
+	else if (S_ISBLK(m)) color = "33";
+	else if (S_ISCHR(m)) color = "35";
+	else if (S_ISLNK(m)) color = "31";
+	else if (S_ISFIFO(m)) color = "36";
+	else if (S_ISSOCK(m)) color = "92";
+	//background
+	if (filename.at(0) == '.') bg = "100";
+		
+	return "\033[1;" + bg + ";" + color + "m" + filename + "\033[0;00m";
+}
+
 //displays all files in a vector files
 //checks flags vector for anything extra
 void displayls(vector<string> filenames, const vector<bool> flags, string currentpath)
@@ -175,20 +194,21 @@ void displayls(vector<string> filenames, const vector<bool> flags, string curren
 		//if -a flag is not set, do not ls a file that starts with . 
 		if (filenames[i].at(0) != '.' || flags[0])
 		{
+			//insert current path at start of string
+			string updatedpath(currentpath + "/" + filenames[i]);
+
+			//filenames[i].insert(0, currentpath + "/");
+			//cout << "checking file: " << filenames[i] << endl;
+
+			//error check stat
+			if (stat(updatedpath.c_str(), &info) != 0)
+			{
+				perror("Error with stat()");
+				exit(1);
+			}
 			//check for potential -l flag
 			if (flags[1])
 			{
-				//insert current path at start of string
-				filenames[i].insert(0, currentpath + "/");
-				//cout << "checking file: " << filenames[i] << endl;
-
-				//error check stat
-				if (stat(filenames[i].c_str(), &info) != 0)
-				{
-					perror("Error with stat()");
-					exit(1);
-				}
-
 				//file permissionse
 				cout << filePermission(info.st_mode) << "\t";
 
@@ -208,15 +228,12 @@ void displayls(vector<string> filenames, const vector<bool> flags, string curren
 				cout << info.st_size << "\t";
 
 				//get time info
-				struct tm lastmodified;
-				lastmodified = *gmtime(&info.st_mtime);
-				//date of last modified
-				cout << getMonth(lastmodified.tm_mon) << " " << lastmodified.tm_mday <<  "\t";
-				//time of last modified
-				cout << lastmodified.tm_hour << ":" << lastmodified.tm_min << "\t";
+				string timeinfo = ctime(&info.st_mtime);
+				//only display, date and time modified
+				cout << timeinfo.substr(4, 12) << "\t";
 			}
 			//display name
-			cout << filenames[i] << endl; 	
+			cout << displayColorText(info.st_mode, filenames[i]) << endl;
 		}
 	}
 }
