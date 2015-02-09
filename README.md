@@ -21,14 +21,13 @@ in the root directoy. You can also add optional parameters, such as the -a, -l, 
 
 ``bin/ls -a -l -R``
 
-You can specify a directory to ls too, along with any optinal flags.
+You can specify a directory to ls too, along with any optional flags.
 
-``bin/ls -a src -l .``
+``bin/ls -a src -R . -l``
 
 ## Kirb
-Currently, there is very limited kirb functionality, which allows the user to care for a pet and see its status as you enter in commands. 
-The command prompt will be replaced by everyones favorite cute looking puff ball.
-It is as crazy as it sounds.
+Currently, there is some extra shell functionality, which allows the user to care for a pet and see its status as you enter in commands. 
+The command prompt will be replaced by a virtual avatar. It's as ridiculous as it sounds.
 
 By typing in:
 
@@ -48,7 +47,7 @@ You can also feed Kirb with the following commands:
 
 ``kirb feed water``
 
-Feeding Kirb will change how Kirb looks onscreen. To reset back to Kirbs default look, just feed him water!
+Feeding Kirb will change how Kirb looks onscreen. To reset back to Kirbs default look, just feed him water.
 
 ##How to use
 You can compile rshell and ls with:
@@ -90,3 +89,7 @@ Limitations of rshell.
 * Any command over 50,000 characters will overflow the command buffer.
 * Any hostname over 300 characters will overflow the hostname buffer.
 But really, you should consider having a shorter hostname in that case.
+
+Limitations of ls.
+
+* After an invalid path is given, ls will not continue with any path or flag afterwards.
