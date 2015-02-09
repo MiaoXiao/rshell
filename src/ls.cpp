@@ -20,27 +20,6 @@
 
 using namespace std;
 
-//given month number, returns month name
-string getMonth(unsigned monthnumber)
-{
-	switch(monthnumber)
-	{
-		case 0: return "Jan";
-		case 1: return "Feb";
-		case 2: return "March";
-		case 3: return "April";
-		case 4: return "May";
-		case 5: return "June";
-		case 6: return "July";
-		case 7: return "Aug";
-		case 8: return "Oct";
-		case 9:	return "Sep";
-		case 10: return "Nov";
-		case 11: return "Dec";
-	}
-	return "Error with getting month name";
-}
-
 //returns string of file permissions
 string filePermission(mode_t m)
 {
@@ -65,65 +44,7 @@ string filePermission(mode_t m)
 	return permissions;
 }
 
-/*
-//returns number of hard links
-//GOD DAMN IT I DIDINT HAVE TO DO THIS
-int findhardlinks(string dir)
-{
-	struct stat inodeinfo;
-	int numbhardlinks = 2;
-
-	//error check opendir
-	DIR *tdirp = opendir(dir.c_str());
-	if (tdirp == NULL)
-	{
-		perror("Error with opendir()");
-		exit(1);
-	}
-
-	dirent *tdirentp;
-	//cout << "checking dir: " << dir << endl;
-	while ((tdirentp = readdir(tdirp)))
-	{
-		if (tdirentp < 0)
-		{
-			perror("Error with readdir()");
-			exit(1);
-		}
-
-		//cout << "file in dir: " << tdirentp->d_name << endl;
-
-		//insert path at start of string
-		string fileindir(tdirentp->d_name);
-
-		//make sure path included is not . or ..
-		if (fileindir != "." && fileindir != "..")
-		{
-			fileindir.insert(0, dir + "/");
-			//error check stat
-			if (stat(fileindir.c_str(), &inodeinfo) == -1)
-			{
-				perror("Error with stat()");
-				exit(1);
-			}
-			//if current file is a directory, increase number of hard links
-			if (S_ISDIR(inodeinfo.st_mode))
-			{
-				++numbhardlinks;
-			//	cout << endl <<  "file added: " << tdirentp->d_name << endl;
-			}
-		}
-	}
-	//error check closed dir
-	if (closedir(tdirp) == -1)
-	{
-		perror("Error with closedir()");
-		exit(1);
-	}
-
-	return numbhardlinks;
-}
-*/
+//displays certain files in specific colors
 string displayColorText(mode_t m, string filename)
 {
 	//cout << "filename: " << filename << endl;
@@ -176,7 +97,7 @@ void displayls(vector<string> filenames, const vector<bool> flags, string curren
 				filenames[i] != "." && filenames[i] != "..") 
 			{
 				rdir.push(updatedpath);
-				cout << "Filenames: " << filenames[i] << endl;
+				//cout << "Filenames: " << filenames[i] << endl;
 			}
 
 			//check for potential -l flag
@@ -188,21 +109,38 @@ void displayls(vector<string> filenames, const vector<bool> flags, string curren
 				//number of hard links
 				cout << info.st_nlink << "\t";
 
-				//user id
+				//user id and error check
 				struct passwd userinfo = *getpwuid(info.st_uid);
+				if (&userinfo == NULL)
+				{
+					perror("Error with getpwuid()");
+					exit(1);
+				}
 				cout << userinfo.pw_name << "\t";
 
-				//group id
+				//group id and error check
 				struct group groupinfo = *getgrgid(info.st_gid);
+				if (&groupinfo == NULL)
+				{
+					perror("Error with getgrgid()");
+					exit(1);
+				}
 				cout << groupinfo.gr_name << "\t";
 
 				//size in bytes
 				cout << info.st_size << "\t";
 
-				//get time info
-				string timeinfo = ctime(&info.st_mtime);
+				//get time info and error check
+				char* timeinfo = ctime(&info.st_mtime);
+				if (timeinfo == NULL)
+				{
+					perror("Error with ctime()");
+					exit(1);
+				}
+
+				string displaytime(timeinfo);
 				//only display, date and time modified
-				cout << timeinfo.substr(4, 12) << "\t";
+				cout << displaytime.substr(4, 12) << "\t";
 
 				//get blocks for this file
 				totalblocks += info.st_blocks;
@@ -211,7 +149,7 @@ void displayls(vector<string> filenames, const vector<bool> flags, string curren
 			cout << displayColorText(info.st_mode, filenames[i]) << endl;
 		}
 	}
-	//display total blocks only if  -l flag is passed
+	//display total blocks only if -l flag is passed
 	if (flags[1]) cout << "Total blocks: " << totalblocks / 2 << endl;
 }
 
@@ -224,7 +162,6 @@ bool parseCommand(char* command, vector<bool> &flags, vector<string> &paths)
 	if (command[0] == '-')
 	{
 		if (command[1] == '\0') return false;
-		
 		for (int i = 1; command[i] != '\0'; i++)
 		{
 			if(command[i] == 'a') flags[0] = true;
@@ -313,7 +250,7 @@ int main(int argc, char *argv[])
 	string processdir;
 
 	//push all paths from vector to a stack
-	for (unsigned i = 0; i < paths.size(); ++i) rdir.push(paths[i]);
+	for (int i = paths.size() - 1; i >= 0; --i) rdir.push(paths[i]);
 
 	//while the stack of paths is not empty, ls files 
 	while (!rdir.empty())
