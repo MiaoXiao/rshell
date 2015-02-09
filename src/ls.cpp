@@ -156,27 +156,25 @@ void displayls(vector<string> filenames, const vector<bool> flags, string curren
 //parses commands to find flags, fills flags vector
 //fills a container with paths
 //returns whether flags are invalid
-bool parseCommand(char* command, vector<bool> &flags, vector<string> &paths)
+void parseCommand(char* command, vector<bool> &flags, vector<string> &paths)
 {
 	//if command is a flag
 	if (command[0] == '-')
 	{
-		if (command[1] == '\0') return false;
+		if (command[1] == '\0') cout << "Error: Please specify a flag after '-'" << endl;
 		for (int i = 1; command[i] != '\0'; i++)
 		{
 			if(command[i] == 'a') flags[0] = true;
 			else if (command[i] == 'l') flags[1] = true;
 			else if (command[i] == 'R') flags[2] = true;
-			else return false;
+			else cout << "Error: Unsupported flag: " << command[i] << endl; 
 		}
 	}
 	else //if command is path
 	{
 		string s(command);
 		paths.push_back(s);
-		return true;
 	}
-	return true;
 }
 
 //DEBUG: displays flag vector
@@ -225,14 +223,10 @@ int main(int argc, char *argv[])
 	{
 		for (int i = 1; i < argc; ++i)
 		{
-			//check command to see if path, flag, or error.
+			//check command to see if path or flag.
 			//fills corresponding container
 			//also updates size of paths array
-			if (!parseCommand(argv[i], flags, paths))
-			{
-				cout << "Invalid flag" << endl;
-				exit(1);
-			}
+			parseCommand(argv[i], flags, paths);
 		}
 	}
 	//if no paths were given, use default path  	
@@ -267,7 +261,7 @@ int main(int argc, char *argv[])
 		DIR *dirp = opendir(processdir.c_str());
 		if (dirp == NULL)
 		{
-			perror ("Error with opendir()");
+			perror("Error with opendir()");
 			exit(1);
 		}
 	
