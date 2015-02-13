@@ -15,6 +15,7 @@ using namespace std;
 //returns whether this operation succeeded or not based off the connector
 bool runCommand(char* executable, char* argumentList[], int connector, Kirb &K)
 {
+	//by default, command will fail
 	int status = 1;
 	//check for kirb executable
 	if (!strcmp(executable, "kirb")) K.selectCommand(argumentList, status);
@@ -50,18 +51,18 @@ void fixCommand(char* command)
     //i keeps track of position in command
     for (int i = 0, j = 0; command[i] != '\0'; ++i, ++j)
     {
-        if (command[i] == '#')
+        if (command[i] == '#') //cpp,,amd recognition
         {
             command[i] = '\0';
             fixedCommand[j] = '\0';
         }
-        else if (command[i] == ';')
+        else if (command[i] == ';')//; connector
         {
             fixedCommand[j] = ' ';
             fixedCommand[++j] = ';';
             fixedCommand[++j] = ' ';
         }
-        else if (command[i] == '|' && command[i + 1] == '|')
+        else if (command[i] == '|' && command[i + 1] == '|')//|| connector
         {
             fixedCommand[j] = ' ';
             fixedCommand[++j] = '|';
@@ -69,13 +70,40 @@ void fixCommand(char* command)
             fixedCommand[++j] = ' ';
             ++i;
         }
-        else if (command[i] == '&' && command[i + 1] == '&')
+        else if (command[i] == '|')//piping
+        {
+			fixedCommand[j] = ' ';
+			fixedCommand[++j] = '|';
+			fixedCommand[++j] = ' ';
+        }
+        else if (command[i] == '&' && command[i + 1] == '&')//&& connector
         {
             fixedCommand[j] = ' ';
             fixedCommand[++j] = '&';
             fixedCommand[++j] = '&';
             fixedCommand[++j] = ' ';
             ++i;
+        }
+        else if (command[i] == '>' && command[i + 1] == '>')//stdout redirection append
+        {
+            fixedCommand[j] = ' ';
+            fixedCommand[++j] = '>';
+            fixedCommand[++j] = '>';
+            fixedCommand[++j] = ' ';
+            ++i;
+        }
+        else if (command[i] == '>')//stdout redirection
+        {
+			fixedCommand[j] = ' ';
+			fixedCommand[++j] = '>';
+			fixedCommand[++j] = ' ';
+
+        }
+        else if (command[i] == '<')//stdin redirection
+        {
+			fixedCommand[j] = ' ';
+			fixedCommand[++j] = '<';
+			fixedCommand[++j] = ' ';
         }
         else fixedCommand[j] = command[i];
 
@@ -85,14 +113,22 @@ void fixCommand(char* command)
     free(fixedCommand);
 }
 
-//checks whether the given snip is a connector
+//checks whether the given snip is a connector/redirection
 //returns -1 if not a connector
 //returns 0, 1, 2 if it is a ; || or &&
+//returns 3 if >
+//returns 4 if <
+//returns 5 if >>
+//returns 6 if |
 int checkConnector(char* snip)
 {
     if (!strcmp(snip, ";")) return 0;
     else if (!strcmp(snip, "||")) return 1;
     else if (!strcmp(snip, "&&")) return 2;
+    else if (!strcmp(snip, ">")) return 3;
+    else if (!strcmp(snip, "<")) return 4;
+    else if (!strcmp(snip, ">>")) return 5;
+    else if (!strcmp(snip, "|")) return 6;
     return -1;
 }
 
@@ -120,7 +156,7 @@ int main(int argc, char* argv[])
 	char command[MEMORY];
     //snippet of the command
     char* snip;
-	//whether the last operation failed or not
+	//whether the snip is a connector, redirection, or neither 
     int connectorFlag = -1;
     //whether you should terminate parsing a command early or not
     bool continueParsing = true;
@@ -144,7 +180,6 @@ int main(int argc, char* argv[])
 
             //partition command, add any necessary spaces to separate statements
             fixCommand(command);
-
 	        //Tokenize command
 	        snip = strtok(command, "\t ");
 
@@ -153,6 +188,10 @@ int main(int argc, char* argv[])
 	        {
                 //cout << "Snip:" << snip << endl;
                 connectorFlag = checkConnector(snip);
+
+                //check if flag is a pipe or redirection
+                //if (connectorFlag != 0 && connectorFlag != 1 && connectorFlag != 2 && connectorFlag != -1)
+	
                 //cout << connectorFlag << endl;
                 if (statement == 0 && connectorFlag == -1)
                 {

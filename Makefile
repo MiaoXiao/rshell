@@ -12,7 +12,7 @@ all: ls
 	$(GCC) $(CFLAGS) $(FILEPATH) $(FILEPATH2) -o $(OUTPATH)  
 rshell:
 	mkdir -p ./bin
-	$(GCC) $(CFLAGS) $(FILEPATH) -o $(OUTPATH)
+	$(GCC) $(CFLAGS) $(FILEPATH) $(FILEPATH2) -o $(OUTPATH)
 ls:
 	mkdir -p ./bin
 	$(GCC) $(CFLAGS) $(FILEPATHLS) -o $(OUTPATHLS)
