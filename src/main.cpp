@@ -5,6 +5,8 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include "Kirb.h"
 
 using namespace std;
@@ -20,15 +22,39 @@ struct task
 	int seperator;
 };
 
+//opens a file. will create a new file if it does not exist
+//specify if you want to append or not
+//returns fd of new file
+int openFile(const char* filename,const bool append)
+{
+	int fd;
+	if (append) fd = open(filename, O_APPEND | O_CREAT, 00600);
+	else fd = open(filename, O_WRONLY | O_CREAT, 00600);
+	if (fd == -1) perror("Error with open()");
+	return fd;
+}
+
+//given 2 fds for src and dst, reads from src and writes into dst
+void wrFile(const int src, const int dst)
+{
+	char buf[BUFSIZ];
+	int reads;
+	int writes;
+	while ((reads = read(src, buf, BUFSIZ)) && (writes = write(dst, buf, reads)));
+}
+
 //run this command given these parameters
-//returns whether this operation succeeded or not based off the connector
+//returns whether this operation succeeded or not based off the seperator 
 void runCommand(vector<task> taskList, Kirb &K)
 {
 	//will be false if tasks processing should halt
 	bool continueTask = true;
 	//loop through and process every task
 	for (unsigned i = 0; i < taskList.size() && continueTask; ++i)
-	{
+	{	
+		//check for >
+		//if (taskList[i].seperator == 3) stdoutput = true;
+
 		//by default, command will fail
 		int status = 1;
 		//check for kirb executable
@@ -65,7 +91,7 @@ void fixCommand(char* command)
     //i keeps track of position in command
     for (int i = 0, j = 0; command[i] != '\0'; ++i, ++j)
     {
-        if (command[i] == '#') //cpp,,amd recognition
+        if (command[i] == '#') //command recognition
         {
             command[i] = '\0';
             fixedCommand[j] = '\0';
@@ -134,7 +160,7 @@ void fixCommand(char* command)
 //returns 4 if <
 //returns 5 if >>
 //returns 6 if |
-int checkSeperator(char* snip)
+int checkSeperator(const char* snip)
 {
     if (!strcmp(snip, ";")) return 0;
     else if (!strcmp(snip, "||")) return 1;
@@ -147,7 +173,7 @@ int checkSeperator(char* snip)
 }
 
 //DEBUG:displays char array
-void displayCharArray(char* a[])
+void displayCharArray(const char* a[])
 {
     for (int i = 0; a[i] != NULL; i++)
         cout << i << ": " << a[i] << endl;

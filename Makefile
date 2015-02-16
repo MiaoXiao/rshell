@@ -7,9 +7,7 @@ OUTPATH = ./bin/rshell
 OUTPATHLS = ./bin/ls
 OUTPATH2 = ./bin/Kirb.o
 
-all: ls
-	mkdir -p ./bin
-	$(GCC) $(CFLAGS) $(FILEPATH) $(FILEPATH2) -o $(OUTPATH)  
+all: ls rshell
 rshell:
 	mkdir -p ./bin
 	$(GCC) $(CFLAGS) $(FILEPATH) $(FILEPATH2) -o $(OUTPATH)
