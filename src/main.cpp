@@ -11,35 +11,49 @@ using namespace std;
 
 #define MEMORY 50000
 
+//structure for processing commands
+struct task
+{
+	//stores all arguments
+	char* argumentList[MEMORY];
+	//seperator id
+	int seperator;
+};
+
 //run this command given these parameters
 //returns whether this operation succeeded or not based off the connector
-bool runCommand(char* executable, char* argumentList[], int connector, Kirb &K)
+void runCommand(vector<task> taskList, Kirb &K)
 {
-	//by default, command will fail
-	int status = 1;
-	//check for kirb executable
-	if (!strcmp(executable, "kirb")) K.selectCommand(argumentList, status);
-	else
+	//will be false if tasks processing should halt
+	bool continueTask = true;
+	//loop through and process every task
+	for (unsigned i = 0; i < taskList.size() && continueTask; ++i)
 	{
-		//check if you should possibly run a command or not
-		//Decide if you should run the next command
-		int pid = fork();
-		if (pid <= -1) //error
+		//by default, command will fail
+		int status = 1;
+		//check for kirb executable
+		if (!strcmp(taskList[i].argumentList[0], "kirb")) K.selectCommand(taskList[i].argumentList, status);
+		else
 		{
-			perror("There was an error with fork()");
-			exit(1);
+			int pid = fork();
+			if (pid <= -1) //error
+			{
+				perror("There was an error with fork()");
+				exit(1);
+			}
+			else if (pid == 0) //child
+			{
+				if (execvp(taskList[i].argumentList[0], taskList[i].argumentList) == -1)
+					perror("There was an error with the executable or argument list");
+				exit(1);
+			}
+			else if (pid > 0) //parent
+				if (waitpid(pid, &status, 0) == -1)	perror("Error with waitpid");
 		}
-		else if (pid == 0) //child
-		{
-			if (execvp(executable, argumentList) == -1)
-				perror("There was an error with the executable or argument list");
-			exit(1);
-		}
-		else if (pid > 0) //parent
-			if (waitpid(pid, &status, 0) == -1)	perror("Error with waitpid");
-	}
-    //cout << "Status: " << status << endl;
-    return (!(status == 0 && connector == 1) || (status > 0 && connector == 2));
+    	//cout << "Status: " << status << endl;
+    	if ((status == 0 && taskList[i].seperator == 1) || (status > 0 && taskList[i].seperator == 2))
+    		continueTask = false;
+    }
 }
 
 //look through command and separate all statements by spaces
@@ -114,13 +128,13 @@ void fixCommand(char* command)
 }
 
 //checks whether the given snip is a connector/redirection
-//returns -1 if not a connector
+//returns -1 if neither 
 //returns 0, 1, 2 if it is a ; || or &&
 //returns 3 if >
 //returns 4 if <
 //returns 5 if >>
 //returns 6 if |
-int checkConnector(char* snip)
+int checkSeperator(char* snip)
 {
     if (!strcmp(snip, ";")) return 0;
     else if (!strcmp(snip, "||")) return 1;
@@ -156,44 +170,47 @@ int main(int argc, char* argv[])
 	char command[MEMORY];
     //snippet of the command
     char* snip;
-	//whether the snip is a connector, redirection, or neither 
-    int connectorFlag = -1;
-    //whether you should terminate parsing a command early or not
-    bool continueParsing = true;
-    //vector for all arguments
-    char* argumentListc[MEMORY];
+    //id for seperator (; || && > < etc)
+    int seperatorid;
+    //whether there are still tasks that must be processed
+    bool finishTask;
+    //whether you are still processing current task
+    bool processTask;
     //arg list position
     int argpos = 0;
-    //keep track of whether you are checking executable or argument
-    // 0 is executable, 1 is argument
-    int statement = 0;
+
+	//holds all tasks. cleared when getting new input
+	vector<task> taskList;
 
 	do
 	{
-            continueParsing = true;
-            statement = 0;
-            argpos = 0;
+		taskList.clear();
+		finishTask = true;
+        argpos = 0;
 
-	        //Retrieve command
-	        cout << user << "@" << host << " " << K.displayExpression() << " ";
-	        cin.getline(command, MEMORY);
+	    //Retrieve command
+	    cout << user << "@" << host << " " << K.displayExpression() << " ";
+	    cin.getline(command, MEMORY);
 
-            //partition command, add any necessary spaces to separate statements
-            fixCommand(command);
-	        //Tokenize command
-	        snip = strtok(command, "\t ");
+        //partition command, add any necessary spaces to separate statements
+        fixCommand(command);
+	    //Tokenize command
+	    snip = strtok(command, "\t ");
+
+		while (finishTask)
+		{
+	        //create a new task
+			task t;
+			processTask = true;
 
 	        //Iterate until entire command is parsed
-            while(snip != NULL && continueParsing)
+            while(snip != NULL && processTask)
 	        {
                 //cout << "Snip:" << snip << endl;
-                connectorFlag = checkConnector(snip);
+                seperatorid = checkSeperator(snip);
 
-                //check if flag is a pipe or redirection
-                //if (connectorFlag != 0 && connectorFlag != 1 && connectorFlag != 2 && connectorFlag != -1)
-	
                 //cout << connectorFlag << endl;
-                if (statement == 0 && connectorFlag == -1)
+                if (seperatorid == -1) //fill struct with arguments
                 {
                     //possibly run any special commands
 					if (!strcmp(snip, "exit")) //terminates shell
@@ -201,39 +218,39 @@ int main(int argc, char* argv[])
 						free(host);
 						exit(1);
 					}
-
-                    argumentListc[argpos] = snip;
+                    t.argumentList[argpos] = snip;
                     argpos++;
-                    statement++;
-                    //cout << "Parsed executable" << endl;
                 }
-                else if (statement == 1 && connectorFlag == -1)
-                {
-                    argumentListc[argpos] = snip;
-                    argpos++;
-                    //cout << "Parsed argument" << endl;
-                }
-                else if (connectorFlag != -1)
+                else //finish struct and add to taskList
                 {
                     //displayCharArray(argumentListc);
-                    //cout << "Connector: " << connectorFlag << endl;
-                    argumentListc[argpos] = '\0';
-                    statement = 0;
+                    t.argumentList[argpos] = '\0';
                     argpos = 0;
-                    if(!runCommand(argumentListc[0], argumentListc, connectorFlag, K)) continueParsing = false;
+					t.seperator = seperatorid;
+					taskList.push_back(t);
+					
+					//finish processing this task
+					processTask = false;
                 }
 
 			    //move to next snippet
 			    snip = strtok(NULL, " ");
-                //check if this is the last command to run
-                if (connectorFlag == -1 && snip == NULL)
+
+				//check to see if this is the last task
+                if (seperatorid == -1 && snip == NULL)
                 {
-                    argumentListc[argpos] = '\0';
+                    t.argumentList[argpos] = '\0';
+                    t.seperator = seperatorid;
+                    taskList.push_back(t);
+
                     //displayCharArray(argumentListc);
-                    runCommand(argumentListc[0], argumentListc, connectorFlag, K);
+                    runCommand(taskList, K);
+                    //all tasks finished, get new tasks from command prompt
+                    finishTask = false;
                 }
 	        }
-	} while (1);
+	    }
+	} while (true);
     return 0;
 }
 

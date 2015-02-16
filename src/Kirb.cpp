@@ -19,11 +19,11 @@ void Kirb::selectCommand(char* argumentList[], int &status)
 	switch (sv.size())
 	{
 		case(0):
-			cout << "Not enough arguments" << endl;
+			cout << "Error with Kirb: not enough arguments" << endl;
 			status = 1;
 			break;
 		case(1):
-			cout << "Not enough arguments" << endl;
+			cout << "Error with Kirb: not enough arguments" << endl;
 			status = 1;
 			break;
 		case(2):
@@ -33,7 +33,7 @@ void Kirb::selectCommand(char* argumentList[], int &status)
 				changeName(sv[1]);
 			else
 			{
-				cout << "Invalid kirb command: that kirb function does not exist" << endl;
+				cout << "Error with Kirb: kirb function does not exist" << endl;
 				status = 1;
 			}
 			break;
