@@ -30,7 +30,11 @@ int openFile(const char* filename,const bool append)
 	int fd;
 	if (append) fd = open(filename, O_APPEND | O_CREAT, 00600);
 	else fd = open(filename, O_WRONLY | O_CREAT, 00600);
-	if (fd == -1) perror("Error with open()");
+	if (fd == -1)
+	{
+		perror("Error with open()");
+		exit(1);
+	}
 	return fd;
 }
 
@@ -40,13 +44,50 @@ void wrFile(const int src, const int dst)
 	char buf[BUFSIZ];
 	int reads;
 	int writes;
-	while ((reads = read(src, buf, BUFSIZ)) && (writes = write(dst, buf, reads)));
+	while ((reads = read(src, &buf, BUFSIZ)) && (writes = write(dst, &buf, reads)));
 }
 
-//run this command given these parameters
-//returns whether this operation succeeded or not based off the seperator 
+//dup fds and error check
+//returns new fd
+int dupCheck(const int o, const int n)
+{
+	int fd = -1;
+	if ((fd == dup2(o, n)) == -1)
+	{
+		perror("Error with dup2()");
+		exit(1);
+	}
+	return fd;
+}
+
+//dup fds and error check
+//returns new fd
+int dupCheck(const int o)
+{
+	int fd = -1;
+	if ((fd == dup(o))== -1)
+	{
+		perror("Error with dup2()");
+		exit(1);
+	}
+	return fd;
+}
+
+
+//close file and error check
+void closeCheck(const int fd)
+{
+	if (close(fd) == -1)
+	{
+		perror("Error with close()");
+		exit(1);
+	}
+}
+
+//run all commands 
 void runCommand(vector<task> taskList, Kirb &K)
 {
+	int writeto;
 	//will be false if tasks processing should halt
 	bool continueTask = true;
 	//loop through and process every task
@@ -57,10 +98,27 @@ void runCommand(vector<task> taskList, Kirb &K)
 
 		//by default, command will fail
 		int status = 1;
+
 		//check for kirb executable
 		if (!strcmp(taskList[i].argumentList[0], "kirb")) K.selectCommand(taskList[i].argumentList, status);
 		else
 		{
+			//check for any piping or redirection
+			switch(taskList[i].seperator)
+			{
+				case 3:
+					writeto = openFile(taskList[i + 1].argumentList[0] ,false);
+					break;
+				case 4:
+					break;
+				case 5:
+					writeto = openFile(taskList[i + 1].argumentList[0], true);
+					break;
+				case 6:
+					break;
+			}
+			
+			//start forking process
 			int pid = fork();
 			if (pid <= -1) //error
 			{
@@ -69,12 +127,50 @@ void runCommand(vector<task> taskList, Kirb &K)
 			}
 			else if (pid == 0) //child
 			{
+				//write to correct file if using redirection
+				switch(taskList[i].seperator)
+				{
+					case 3:
+						closeCheck(1);
+						dupCheck(writeto, 1);
+						break;
+					case 4:
+						break;
+					case 5:
+						closeCheck(1);
+						dupCheck(writeto, 1);
+						break;
+					case 6:
+						break;
+				}
+
 				if (execvp(taskList[i].argumentList[0], taskList[i].argumentList) == -1)
 					perror("There was an error with the executable or argument list");
+
 				exit(1);
 			}
 			else if (pid > 0) //parent
+			{
 				if (waitpid(pid, &status, 0) == -1)	perror("Error with waitpid");
+				
+				//close
+				switch(taskList[i].seperator)
+				{
+					case 3:
+						closeCheck(writeto);
+						i++;
+						break;
+					case 4:
+						break;
+					case 5:
+						closeCheck(writeto);
+						i++;
+						break;
+					case 6:
+						break;
+				}
+
+			}
 		}
     	//cout << "Status: " << status << endl;
     	if ((status == 0 && taskList[i].seperator == 1) || (status > 0 && taskList[i].seperator == 2))
