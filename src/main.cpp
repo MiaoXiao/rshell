@@ -339,7 +339,6 @@ int main(int argc, char* argv[])
 
 	    //Tokenize command
 	    snip = strtok(command, "\t ");
-
 	
 		//iterate through the entire command
 		while (finishTask)
@@ -386,7 +385,11 @@ int main(int argc, char* argv[])
 			    snip = strtok(NULL, " ");
 				
 				//if there is a connector, push finished task to vector
-				if (connectorid != -1 || snip == NULL) taskList.push_back(t);
+				if (connectorid != -1 || snip == NULL)
+				{
+                    t.argumentList[argpos] = '\0';
+					taskList.push_back(t);
+				}
 
                 //if last task, run all tasks
                 if (snip == NULL)
