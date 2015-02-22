@@ -13,13 +13,18 @@ using namespace std;
 
 #define MEMORY 50000
 
-//structure for processing commands
+//structure for processing segments of a command 
 struct task
 {
 	//stores all arguments
 	char* argumentList[MEMORY];
-	//seperator id
-	int seperator;
+	//connector id
+	int connector;
+	//vector of all seperators(redirection) in a task
+	//if no seperators, vector is empty
+	vector<int> seperators;
+	//default connector is -1
+	task():connector(-1){}
 };
 
 //opens a file. will create a new file if it does not exist
@@ -86,25 +91,24 @@ void closeCheck(const int fd)
 //run all commands 
 void runCommand(vector<task> taskList, Kirb &K)
 {
-	int writeto;
+	//int writeto;
 	//will be false if tasks processing should halt
 	bool continueTask = true;
 	//loop through and process every task
-	for (unsigned i = 0; i < taskList.size() && continueTask; ++i)
+	for (unsigned i = 0; i < taskList.size() && continueTask && taskList[i].argumentList[0] != '\0'; ++i)
 	{	
 		//by default, command will fail
 		int status = 1;
 		//check for kirb executable
 		if (!strcmp(taskList[i].argumentList[0], "kirb")) K.selectCommand(taskList[i].argumentList, status);
-		//if redirection/pipe and not enough arguments, do not run command
-		else if (taskList[i].seperator == -1 ||
-				taskList[i].seperator == 0 ||
-				taskList[i].seperator == 1 ||
-				taskList[i].seperator == 2 ||
-				i + 1 < taskList.size())
+		//if either a connector, or there is 1 less redirection/pipe than executable/arguments, run the command 
+		else if (taskList[i].connector != -1 ||
+				(taskList[i].connector == -1 && taskList[i].seperators.empty()) ||
+				(sizeof(taskList[i].argumentList) / sizeof(taskList[i].argumentList[0]) - 1)
+				== taskList[i].seperators.size())
 		{
 			//check for any piping or redirection
-			switch(taskList[i].seperator)
+			/*switch(taskList[i].seperators[i])
 			{	
 				case 3: // >
 				case 4: // <
@@ -116,7 +120,7 @@ void runCommand(vector<task> taskList, Kirb &K)
 					break;
 				case 6:
 					break;
-			}
+			}*/
 			
 			//start forking process
 			int pid = fork();
@@ -128,7 +132,7 @@ void runCommand(vector<task> taskList, Kirb &K)
 			else if (pid == 0) //child
 			{
 				//write to correct file if using redirection
-				switch(taskList[i].seperator)
+				/*switch(taskList[i].seperators[i])
 				{
 					case 3:
 					case 5: //redirect stdout
@@ -142,7 +146,7 @@ void runCommand(vector<task> taskList, Kirb &K)
 					case 6:
 						break;
 				}
-
+*/
 				if (execvp(taskList[i].argumentList[0], taskList[i].argumentList) == -1)
 					perror("There was an error with the executable or argument list");
 
@@ -151,9 +155,9 @@ void runCommand(vector<task> taskList, Kirb &K)
 			else if (pid > 0) //parent
 			{
 				if (waitpid(pid, &status, 0) == -1)	perror("Error with waitpid");
-				
+/*				
 				//close fds
-				switch(taskList[i].seperator)
+				switch(taskList[i].seperators[i])
 				{
 					case 3:
 					case 5:
@@ -165,7 +169,7 @@ void runCommand(vector<task> taskList, Kirb &K)
 					case 6:
 						break;
 				}
-
+*/
 			}
 		}
 		else
@@ -174,7 +178,7 @@ void runCommand(vector<task> taskList, Kirb &K)
 			continueTask = false;
 		}
     	//cout << "Status: " << status << endl;
-    	if ((status == 0 && taskList[i].seperator == 1) || (status > 0 && taskList[i].seperator == 2))
+    	if ((status == 0 && taskList[i].connector == 1) || (status > 0 && taskList[i].connector == 2))
     		continueTask = false;
     }
 }
@@ -250,23 +254,30 @@ void fixCommand(char* command)
     free(fixedCommand);
 }
 
-//checks whether the given snip is a connector/redirection
+//check if a snip is a connector
 //returns -1 if none 
 //returns 0, 1, 2 if it is a ; || or &&
+int checkConnector(const char* snip)
+{
+    if (!strcmp(snip, ";")) return 0;
+    else if (!strcmp(snip, "||")) return 1;
+    else if (!strcmp(snip, "&&")) return 2;
+    return -1;
+}
+
+//checks if a snip is a seperator
+//return -1 if none
 //returns 3 if >
 //returns 4 if <
 //returns 5 if >>
 //returns 6 if |
 int checkSeperator(const char* snip)
 {
-    if (!strcmp(snip, ";")) return 0;
-    else if (!strcmp(snip, "||")) return 1;
-    else if (!strcmp(snip, "&&")) return 2;
-    else if (!strcmp(snip, ">")) return 3;
+    if (!strcmp(snip, ">")) return 3;
     else if (!strcmp(snip, "<")) return 4;
     else if (!strcmp(snip, ">>")) return 5;
     else if (!strcmp(snip, "|")) return 6;
-    return -1;
+	return -1;	
 }
 
 //DEBUG:displays char array
@@ -291,9 +302,11 @@ int main(int argc, char* argv[])
 	Kirb K;
 	//user input command
 	char command[MEMORY];
-    //snippet of the command
+    //set of characters seperated by spaces in a command
     char* snip;
-    //id for seperator (; || && > < etc)
+    //id for connector (; || &&)
+    int connectorid;
+    //id for seperator (< > >> |)
     int seperatorid;
     //whether there are still tasks that must be processed
     bool finishTask;
@@ -315,59 +328,73 @@ int main(int argc, char* argv[])
 	    cout << user << "@" << host << " " << K.displayExpression() << " ";
 	    cin.getline(command, MEMORY);
 
+		//check if nothing is entered
+		if (!strcmp(command, "\0")) finishTask = false; 
+
         //partition command, add any necessary spaces to separate statements
         fixCommand(command);
+
+		//check if nothing is entered
+		if (!strcmp(command, "\0")) finishTask = false; 
+
 	    //Tokenize command
 	    snip = strtok(command, "\t ");
 
+	
+		//iterate through the entire command
 		while (finishTask)
 		{
 	        //create a new task
 			task t;
 			processTask = true;
+			//reset position of argumentlist
+			argpos = 0;
 
-	        //Iterate until entire command is parsed
+	        //Iterate through a snip 
             while(snip != NULL && processTask)
 	        {
-                //cout << "Snip:" << snip << endl;
+                //get ids for connector and seperator
+                connectorid = checkConnector(snip);
                 seperatorid = checkSeperator(snip);
 
-                //cout << connectorFlag << endl;
-                if (seperatorid == -1) //fill struct with arguments
+				//process executable/arguments
+                if (connectorid == -1 && seperatorid == -1) 
                 {
                     //possibly run any special commands
-					if (!strcmp(snip, "exit")) //terminates shell
+					if (!strcmp(snip, "exit")) 
 					{
 						free(host);
 						exit(1);
 					}
-					t.seperator = seperatorid;
                     t.argumentList[argpos] = snip;
                     argpos++;
                 }
-                else //finish struct and add to taskList
+                else if (connectorid != -1) //process connector
                 {
-                    //displayCharArray(argumentListc);
                     t.argumentList[argpos] = '\0';
-                    argpos = 0;
-					t.seperator = seperatorid;
-					taskList.push_back(t);
+					t.connector = connectorid;
 					
-					//finish processing this task
+					//finish processing this task, will get a new task
 					processTask = false;
+                }
+                else if (seperatorid != -1) //process seperator
+                {
+					t.seperators.push_back(seperatorid);
                 }
 
 			    //move to next snippet
 			    snip = strtok(NULL, " ");
+				
+				//if there is a connector, push finished task to vector
+				if (connectorid != -1 || snip == NULL) taskList.push_back(t);
 
-                //check to see if that was the last task
+                //if last task, run all tasks
                 if (snip == NULL)
                 {
-                	//if last task had no connector at the end, push back task
-                	if (t.seperator == -1) taskList.push_back(t);
                     runCommand(taskList, K);
                     //all tasks finished, get new tasks from command prompt
                     finishTask = false;
+                    processTask = false;
                 }
 	        }
 	    }
