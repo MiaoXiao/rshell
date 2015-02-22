@@ -25,18 +25,23 @@ struct task
 	//vector of all seperators(redirection) in a task
 	//if no seperators, vector is empty
 	vector<int> seperators;
-	//default connector is -1
-	task():argumentListSize(0), connector(-1){}
+	//position of said seperator in arglist
+	vector<int> seperatorPos;
+	//default constructor 
+	task():argumentListSize(0), connector(-1), seperatorPos(0){}
 };
 
 //opens a file. will create a new file if it does not exist
 //specify if you want to append or not
+//specify if you should create a new file, if it does not already exist
 //returns fd of new file
-int openFile(const char* filename, const bool append)
+int openFile(const char* filename, const bool append, const bool create)
 {
 	int fd;
-	if (append) fd = open(filename, O_APPEND | O_WRONLY | O_CREAT, 00600);
-	else fd = open(filename, O_CREAT | O_WRONLY | O_TRUNC, 00600);
+	if (create && append) fd = open(filename, O_APPEND | O_WRONLY | O_CREAT, 00600);
+	else if (create && !append) fd = open(filename, O_CREAT | O_WRONLY | O_TRUNC, 00600);
+	else if (!create && append) fd = open(filename, O_APPEND | O_WRONLY);
+	else if (!create && !append) fd = open(filename, O_WRONLY | O_TRUNC);
 	if (fd == -1)
 	{
 		perror("Error with open()");
@@ -102,29 +107,43 @@ void runCommand(vector<task> taskList, Kirb &K)
 	{
 		//by default, command will fail
 		int status = 1;
+		//short cut for taskList[i].seperatorPos
+		int sepPos;
+		//short cut for whether you should process redirection/piping or not
+		bool redirection = !taskList[i].seperators.empty();
 		//check for kirb executable
 		if (!strcmp(taskList[i].argumentList[0], "kirb")) K.selectCommand(taskList[i].argumentList, status);
 		//if either a connector, OR
 		//no connector AND no seperators, OR
-		//size of arglist - 1 is equal to the number of seperators,
+		//the next next position in arglist is not NULL
 		//try to run command
 		else if (taskList[i].connector != -1 ||
-				(taskList[i].connector == -1 && taskList[i].seperators.empty()) ||
-				(taskList[i].argumentListSize - 1 == taskList[i].seperators.size()))
+				(taskList[i].connector == -1 && !redirection) ||
+				(i + 1 < taskList[i].argumentListSize))
 		{
 			//if using seperators, open files
-			if (!taskList[i].seperators.empty())
+			if (redirection)
 			{
-				cout << "sep: " << taskList[i].seperators[0] << endl;
+				sepPos = taskList[i].seperatorPos[i];
+				cout << "seperator: " << taskList[i].seperators[i] << endl;
+				cout << "opening: " << taskList[i].argumentList[i + sepPos] << endl;
+
 				switch(taskList[i].seperators[i])
 				{	
 					case 3: // >
+						writeto = openFile(taskList[i].argumentList[i + sepPos], false, true);
+						break;
 					case 4: // <
-						cout << "opening: " << taskList[i].argumentList[i + 1] << endl;
-						writeto = openFile(taskList[i].argumentList[i + 1], false);
+						struct stat teststat;
+						if (stat(taskList[i].argumentList[i + sepPos], &teststat) == -1)
+							perror("Error with stat()");
+						else
+						{
+							writeto = openFile(taskList[i].argumentList[i + sepPos], false, false);  
+						}
 						break;
 					case 5: // >>
-						writeto = openFile(taskList[i].argumentList[i + 1], true);
+						writeto = openFile(taskList[i].argumentList[i + sepPos], true, true);
 						break;
 					case 6:
 						break;
@@ -141,7 +160,7 @@ void runCommand(vector<task> taskList, Kirb &K)
 			else if (pid == 0) //child
 			{
 				//write to correct file if using redirection
-				if (!taskList[i].seperators.empty())
+				if (redirection)
 				{
 					switch(taskList[i].seperators[i])
 					{
@@ -149,22 +168,22 @@ void runCommand(vector<task> taskList, Kirb &K)
 						case 5: //redirect stdout
 							closeCheck(1);
 							dupCheck(writeto, 1);
-							taskList[i].argumentList[i + 1] = '\0';
+							taskList[i].argumentList[i + sepPos] = '\0';
 							break;
 						case 4: //redirect stdin
 							closeCheck(0);
 							dupCheck(writeto, 0);
-							taskList[i].argumentList[i + 1] = '\0';
+							taskList[i].argumentList[i + sepPos] = '\0';
 							break;
 						case 6:
 							break;
 					}
 				}
-				
+
 				//try to run the executable/arguments
 				if (execvp(taskList[i].argumentList[0], taskList[i].argumentList) == -1)
 					perror("There was an error with the executable or argument list");
-
+				
 				exit(1);
 			}
 			else if (pid > 0) //parent
@@ -172,7 +191,7 @@ void runCommand(vector<task> taskList, Kirb &K)
 				if (waitpid(pid, &status, 0) == -1)	perror("Error with waitpid");
 				
 				//close fds
-				if (!taskList[i].seperators.empty())
+				if (redirection)
 				{
 					switch(taskList[i].seperators[i])
 					{
@@ -324,6 +343,8 @@ int main(int argc, char* argv[])
     int connectorid;
     //id for seperator (< > >> |)
     int seperatorid;
+    //current pos of seperator
+    int seperatorPosid;
     //whether there are still tasks that must be processed
     bool finishTask;
     //whether you are still processing current task
@@ -336,7 +357,6 @@ int main(int argc, char* argv[])
 
 	do
 	{
-		cout << "New task" << endl;
 		taskList.clear();
 		finishTask = true;
         argpos = 0;
@@ -365,6 +385,8 @@ int main(int argc, char* argv[])
 			processTask = true;
 			//reset position of argumentlist
 			argpos = 0;
+			//reset seppos
+			seperatorPosid = 0;
 
 	        //Iterate through a snip 
             while(snip != NULL && processTask)
@@ -385,6 +407,7 @@ int main(int argc, char* argv[])
                     t.argumentList[argpos] = snip;
                     t.argumentListSize++;
                     argpos++;
+                    seperatorPosid++;
                 }
                 else if (connectorid != -1) //process connector
                 {
@@ -395,8 +418,32 @@ int main(int argc, char* argv[])
 					processTask = false;
                 }
                 else if (seperatorid != -1) //process seperator
-                {
+                {/*
+					char three[] = {'3', '\0'};
+					char four[] = {'4', '\0'};
+					char five[] = {'5', '\0'};
+					char six[] = {'6', '\0'};
+
+                	//push string to arglist
+					switch(seperatorid)
+					{
+						case 3:
+							t.argumentList[argpos] = three;
+							break;
+						case 4:
+							t.argumentList[argpos] = four;
+							break;
+						case 5:
+							t.argumentList[argpos] = five;
+							break;
+						case 6:
+							t.argumentList[argpos] = six;
+							break;
+					}
+                	argpos++;
+                	t.argumentListSize++;*/
 					t.seperators.push_back(seperatorid);
+					t.seperatorPos.push_back(seperatorPosid);
                 }
 				
 			    //move to next snippet
@@ -412,9 +459,9 @@ int main(int argc, char* argv[])
                 //if last task, run all tasks
                 if (snip == NULL)
                 {
-                	//displayCharArray(t.argumentList);
-                	//cout << "size of seperators: " << t.seperators.size() << endl;
-                	//cout << "size of arglist: " << t.argumentListSize << endl;
+                	displayCharArray(t.argumentList);
+                	cout << "size of seperators: " << t.seperators.size() << endl;
+                	cout << "size of arglist: " << t.argumentListSize << endl;
                     runCommand(taskList, K);
                     //all tasks finished, get new tasks from command prompt
                     finishTask = false;
