@@ -92,25 +92,26 @@ void runCommand(vector<task> taskList, Kirb &K)
 	//loop through and process every task
 	for (unsigned i = 0; i < taskList.size() && continueTask; ++i)
 	{	
-		//check for >
-		//if (taskList[i].seperator == 3) stdoutput = true;
-
 		//by default, command will fail
 		int status = 1;
-
 		//check for kirb executable
 		if (!strcmp(taskList[i].argumentList[0], "kirb")) K.selectCommand(taskList[i].argumentList, status);
-		else
+		//if redirection/pipe and not enough arguments, do not run command
+		else if (taskList[i].seperator == -1 ||
+				taskList[i].seperator == 0 ||
+				taskList[i].seperator == 1 ||
+				taskList[i].seperator == 2 ||
+				i + 1 < taskList.size())
 		{
 			//check for any piping or redirection
 			switch(taskList[i].seperator)
-			{
-				case 3:
+			{	
+				case 3: // >
+				case 4: // <
 					writeto = openFile(taskList[i + 1].argumentList[0] ,false);
 					break;
-				case 4:
 					break;
-				case 5:
+				case 5: // >>
 					writeto = openFile(taskList[i + 1].argumentList[0], true);
 					break;
 				case 6:
@@ -130,11 +131,13 @@ void runCommand(vector<task> taskList, Kirb &K)
 				switch(taskList[i].seperator)
 				{
 					case 3:
-					case 5:
+					case 5: //redirect stdout
 						closeCheck(1);
 						dupCheck(writeto, 1);
 						break;
-					case 4:
+					case 4: //redirect stdin
+						closeCheck(0);
+						dupCheck(writeto, 0);
 						break;
 					case 6:
 						break;
@@ -164,6 +167,11 @@ void runCommand(vector<task> taskList, Kirb &K)
 				}
 
 			}
+		}
+		else
+		{
+			cout << "Error: need more arguments for redirection/piping" << endl;
+			continueTask = false;
 		}
     	//cout << "Status: " << status << endl;
     	if ((status == 0 && taskList[i].seperator == 1) || (status > 0 && taskList[i].seperator == 2))
@@ -243,7 +251,7 @@ void fixCommand(char* command)
 }
 
 //checks whether the given snip is a connector/redirection
-//returns -1 if neither 
+//returns -1 if none 
 //returns 0, 1, 2 if it is a ; || or &&
 //returns 3 if >
 //returns 4 if <
@@ -333,6 +341,7 @@ int main(int argc, char* argv[])
 						free(host);
 						exit(1);
 					}
+					t.seperator = seperatorid;
                     t.argumentList[argpos] = snip;
                     argpos++;
                 }
@@ -351,14 +360,11 @@ int main(int argc, char* argv[])
 			    //move to next snippet
 			    snip = strtok(NULL, " ");
 
-				//check to see if this is the last task
-                if (seperatorid == -1 && snip == NULL)
+                //check to see if that was the last task
+                if (snip == NULL)
                 {
-                    t.argumentList[argpos] = '\0';
-                    t.seperator = seperatorid;
-                    taskList.push_back(t);
-
-                    //displayCharArray(argumentListc);
+                	//if last task had no connector at the end, push back task
+                	if (t.seperator == -1) taskList.push_back(t);
                     runCommand(taskList, K);
                     //all tasks finished, get new tasks from command prompt
                     finishTask = false;
