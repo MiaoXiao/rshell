@@ -25,11 +25,11 @@ struct task
 //opens a file. will create a new file if it does not exist
 //specify if you want to append or not
 //returns fd of new file
-int openFile(const char* filename,const bool append)
+int openFile(const char* filename, const bool append)
 {
 	int fd;
-	if (append) fd = open(filename, O_APPEND | O_CREAT, 00600);
-	else fd = open(filename, O_WRONLY | O_CREAT, 00600);
+	if (append) fd = open(filename, O_APPEND | O_WRONLY | O_CREAT, 00600);
+	else fd = open(filename, O_CREAT | O_WRONLY | O_TRUNC, 00600);
 	if (fd == -1)
 	{
 		perror("Error with open()");
@@ -65,14 +65,13 @@ int dupCheck(const int o, const int n)
 int dupCheck(const int o)
 {
 	int fd = -1;
-	if ((fd == dup(o))== -1)
+	if ((fd == dup(o)) == -1)
 	{
-		perror("Error with dup2()");
+		perror("Error with dup()");
 		exit(1);
 	}
 	return fd;
 }
-
 
 //close file and error check
 void closeCheck(const int fd)
@@ -131,14 +130,11 @@ void runCommand(vector<task> taskList, Kirb &K)
 				switch(taskList[i].seperator)
 				{
 					case 3:
+					case 5:
 						closeCheck(1);
 						dupCheck(writeto, 1);
 						break;
 					case 4:
-						break;
-					case 5:
-						closeCheck(1);
-						dupCheck(writeto, 1);
 						break;
 					case 6:
 						break;
@@ -153,18 +149,15 @@ void runCommand(vector<task> taskList, Kirb &K)
 			{
 				if (waitpid(pid, &status, 0) == -1)	perror("Error with waitpid");
 				
-				//close
+				//close fds
 				switch(taskList[i].seperator)
 				{
 					case 3:
+					case 5:
 						closeCheck(writeto);
 						i++;
 						break;
 					case 4:
-						break;
-					case 5:
-						closeCheck(writeto);
-						i++;
 						break;
 					case 6:
 						break;
