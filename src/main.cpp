@@ -18,13 +18,15 @@ struct task
 {
 	//stores all arguments
 	char* argumentList[MEMORY];
+	//size of argumentlist
+	unsigned int argumentListSize;
 	//connector id
 	int connector;
 	//vector of all seperators(redirection) in a task
 	//if no seperators, vector is empty
 	vector<int> seperators;
 	//default connector is -1
-	task():connector(-1){}
+	task():argumentListSize(0), connector(-1){}
 };
 
 //opens a file. will create a new file if it does not exist
@@ -91,37 +93,44 @@ void closeCheck(const int fd)
 //run all commands 
 void runCommand(vector<task> taskList, Kirb &K)
 {
-	//int writeto;
+	//file descriptor for any file opened
+	int writeto;
 	//will be false if tasks processing should halt
 	bool continueTask = true;
 	//loop through and process every task
 	for (unsigned i = 0; i < taskList.size() && continueTask && taskList[i].argumentList[0] != '\0'; ++i)
-	{	
+	{
 		//by default, command will fail
 		int status = 1;
 		//check for kirb executable
 		if (!strcmp(taskList[i].argumentList[0], "kirb")) K.selectCommand(taskList[i].argumentList, status);
-		//if either a connector, or there is 1 less redirection/pipe than executable/arguments, run the command 
+		//if either a connector, OR
+		//no connector AND no seperators, OR
+		//size of arglist - 1 is equal to the number of seperators,
+		//try to run command
 		else if (taskList[i].connector != -1 ||
 				(taskList[i].connector == -1 && taskList[i].seperators.empty()) ||
-				(sizeof(taskList[i].argumentList) / sizeof(taskList[i].argumentList[0]) - 1)
-				== taskList[i].seperators.size())
+				(taskList[i].argumentListSize - 1 == taskList[i].seperators.size()))
 		{
-			//check for any piping or redirection
-			/*switch(taskList[i].seperators[i])
-			{	
-				case 3: // >
-				case 4: // <
-					writeto = openFile(taskList[i + 1].argumentList[0] ,false);
-					break;
-					break;
-				case 5: // >>
-					writeto = openFile(taskList[i + 1].argumentList[0], true);
-					break;
-				case 6:
-					break;
-			}*/
-			
+			//if using seperators, open files
+			if (!taskList[i].seperators.empty())
+			{
+				cout << "sep: " << taskList[i].seperators[0] << endl;
+				switch(taskList[i].seperators[i])
+				{	
+					case 3: // >
+					case 4: // <
+						cout << "opening: " << taskList[i].argumentList[i + 1] << endl;
+						writeto = openFile(taskList[i].argumentList[i + 1], false);
+						break;
+					case 5: // >>
+						writeto = openFile(taskList[i].argumentList[i + 1], true);
+						break;
+					case 6:
+						break;
+				}
+			}
+
 			//start forking process
 			int pid = fork();
 			if (pid <= -1) //error
@@ -132,21 +141,27 @@ void runCommand(vector<task> taskList, Kirb &K)
 			else if (pid == 0) //child
 			{
 				//write to correct file if using redirection
-				/*switch(taskList[i].seperators[i])
+				if (!taskList[i].seperators.empty())
 				{
-					case 3:
-					case 5: //redirect stdout
-						closeCheck(1);
-						dupCheck(writeto, 1);
-						break;
-					case 4: //redirect stdin
-						closeCheck(0);
-						dupCheck(writeto, 0);
-						break;
-					case 6:
-						break;
+					switch(taskList[i].seperators[i])
+					{
+						case 3:
+						case 5: //redirect stdout
+							closeCheck(1);
+							dupCheck(writeto, 1);
+							taskList[i].argumentList[i + 1] = '\0';
+							break;
+						case 4: //redirect stdin
+							closeCheck(0);
+							dupCheck(writeto, 0);
+							taskList[i].argumentList[i + 1] = '\0';
+							break;
+						case 6:
+							break;
+					}
 				}
-*/
+				
+				//try to run the executable/arguments
 				if (execvp(taskList[i].argumentList[0], taskList[i].argumentList) == -1)
 					perror("There was an error with the executable or argument list");
 
@@ -155,26 +170,27 @@ void runCommand(vector<task> taskList, Kirb &K)
 			else if (pid > 0) //parent
 			{
 				if (waitpid(pid, &status, 0) == -1)	perror("Error with waitpid");
-/*				
+				
 				//close fds
-				switch(taskList[i].seperators[i])
+				if (!taskList[i].seperators.empty())
 				{
-					case 3:
-					case 5:
-						closeCheck(writeto);
-						i++;
-						break;
-					case 4:
-						break;
-					case 6:
-						break;
+					switch(taskList[i].seperators[i])
+					{
+						case 3:
+						case 5:
+							closeCheck(writeto);
+							break;
+						case 4:
+							break;
+						case 6:
+							break;
+					}
 				}
-*/
 			}
 		}
 		else
 		{
-			cout << "Error: need more arguments for redirection/piping" << endl;
+			cout << "Incorrect use of redirection or piping" << endl;
 			continueTask = false;
 		}
     	//cout << "Status: " << status << endl;
@@ -281,7 +297,7 @@ int checkSeperator(const char* snip)
 }
 
 //DEBUG:displays char array
-void displayCharArray(const char* a[])
+void displayCharArray(char* a[])
 {
     for (int i = 0; a[i] != NULL; i++)
         cout << i << ": " << a[i] << endl;
@@ -320,6 +336,7 @@ int main(int argc, char* argv[])
 
 	do
 	{
+		cout << "New task" << endl;
 		taskList.clear();
 		finishTask = true;
         argpos = 0;
@@ -366,6 +383,7 @@ int main(int argc, char* argv[])
 						exit(1);
 					}
                     t.argumentList[argpos] = snip;
+                    t.argumentListSize++;
                     argpos++;
                 }
                 else if (connectorid != -1) //process connector
@@ -380,7 +398,7 @@ int main(int argc, char* argv[])
                 {
 					t.seperators.push_back(seperatorid);
                 }
-
+				
 			    //move to next snippet
 			    snip = strtok(NULL, " ");
 				
@@ -394,6 +412,9 @@ int main(int argc, char* argv[])
                 //if last task, run all tasks
                 if (snip == NULL)
                 {
+                	//displayCharArray(t.argumentList);
+                	//cout << "size of seperators: " << t.seperators.size() << endl;
+                	//cout << "size of arglist: " << t.argumentListSize << endl;
                     runCommand(taskList, K);
                     //all tasks finished, get new tasks from command prompt
                     finishTask = false;
