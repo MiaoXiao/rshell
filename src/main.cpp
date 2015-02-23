@@ -7,6 +7,7 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <queue>
 #include "Kirb.h"
 
 using namespace std;
@@ -41,12 +42,8 @@ int openFile(const char* filename, const bool append, const bool create)
 	if (create && append) fd = open(filename, O_APPEND | O_WRONLY | O_CREAT, 00600);
 	else if (create && !append) fd = open(filename, O_CREAT | O_WRONLY | O_TRUNC, 00600);
 	else if (!create && append) fd = open(filename, O_APPEND | O_WRONLY);
-	else if (!create && !append) fd = open(filename, O_WRONLY | O_TRUNC);
-	if (fd == -1)
-	{
-		perror("Error with open()");
-		exit(1);
-	}
+	else if (!create && !append) fd = open(filename, O_RDONLY);
+	if (fd == -1) perror("Error with open()");
 	return fd;
 }
 
@@ -98,8 +95,12 @@ void closeCheck(const int fd)
 //run all commands 
 void runCommand(vector<task> taskList, Kirb &K)
 {
-	//file descriptor for any file opened
-	int writeto;
+	//individual fd
+	int w;
+	//holds all files to write to
+	vector<int> writeto;
+	//short cut for taskList[i].seperatorPos
+	int sepPos;
 	//will be false if tasks processing should halt
 	bool continueTask = true;
 	//loop through and process every task
@@ -107,8 +108,6 @@ void runCommand(vector<task> taskList, Kirb &K)
 	{
 		//by default, command will fail
 		int status = 1;
-		//short cut for taskList[i].seperatorPos
-		int sepPos;
 		//short cut for whether you should process redirection/piping or not
 		bool redirection = !taskList[i].seperators.empty();
 		//check for kirb executable
@@ -124,29 +123,27 @@ void runCommand(vector<task> taskList, Kirb &K)
 			//if using seperators, open files
 			if (redirection)
 			{
-				sepPos = taskList[i].seperatorPos[i];
-				cout << "seperator: " << taskList[i].seperators[i] << endl;
-				cout << "opening: " << taskList[i].argumentList[i + sepPos] << endl;
-
-				switch(taskList[i].seperators[i])
-				{	
-					case 3: // >
-						writeto = openFile(taskList[i].argumentList[i + sepPos], false, true);
-						break;
-					case 4: // <
-						struct stat teststat;
-						if (stat(taskList[i].argumentList[i + sepPos], &teststat) == -1)
-							perror("Error with stat()");
-						else
-						{
-							writeto = openFile(taskList[i].argumentList[i + sepPos], false, false);  
-						}
-						break;
-					case 5: // >>
-						writeto = openFile(taskList[i].argumentList[i + sepPos], true, true);
-						break;
-					case 6:
-						break;
+				for(unsigned j = 0; j < taskList[i].seperatorPos.size(); ++j)
+				{
+					sepPos = taskList[i].seperatorPos[j];
+					cout << "seperator: " << taskList[i].seperators[j] << endl;
+					cout << "opening: " << taskList[i].argumentList[i + sepPos] << endl;
+					switch(taskList[i].seperators[j])
+					{	
+						case 3: // >
+							w = openFile(taskList[i].argumentList[sepPos], false, true);
+							break;
+						case 4: // <
+							w = openFile(taskList[i].argumentList[sepPos], false, false);  
+							if (w == -1) redirection = false;
+							break;
+						case 5: // >>
+							w = openFile(taskList[i].argumentList[sepPos], true, true);
+							break;
+						case 6:
+							break;
+					}
+					writeto.push_back(w);
 				}
 			}
 
@@ -162,21 +159,25 @@ void runCommand(vector<task> taskList, Kirb &K)
 				//write to correct file if using redirection
 				if (redirection)
 				{
-					switch(taskList[i].seperators[i])
+					for (unsigned j = 0; j < taskList[i].seperatorPos.size(); ++j)
 					{
-						case 3:
-						case 5: //redirect stdout
-							closeCheck(1);
-							dupCheck(writeto, 1);
-							taskList[i].argumentList[i + sepPos] = '\0';
-							break;
-						case 4: //redirect stdin
-							closeCheck(0);
-							dupCheck(writeto, 0);
-							taskList[i].argumentList[i + sepPos] = '\0';
-							break;
-						case 6:
-							break;
+						sepPos = taskList[i].seperatorPos[j];
+						switch(taskList[i].seperators[j])
+						{
+							case 3: // > 
+							case 5: // >>
+								closeCheck(1);
+								dupCheck(writeto[j], 1);
+								taskList[i].argumentList[sepPos] = '\0';
+								break;
+							case 4: // <
+								closeCheck(0);
+								dupCheck(writeto[j], 0);
+								taskList[i].argumentList[sepPos + 1] = '\0';
+								break;
+							case 6:
+								break;
+						}
 					}
 				}
 
@@ -193,19 +194,14 @@ void runCommand(vector<task> taskList, Kirb &K)
 				//close fds
 				if (redirection)
 				{
-					switch(taskList[i].seperators[i])
+					for(unsigned j = 0; j < writeto.size(); ++j)
 					{
-						case 3:
-						case 5:
-							closeCheck(writeto);
-							break;
-						case 4:
-							break;
-						case 6:
-							break;
+						closeCheck(writeto[j]);
 					}
 				}
 			}
+			writeto.clear();
+
 		}
 		else
 		{
@@ -385,7 +381,7 @@ int main(int argc, char* argv[])
 			processTask = true;
 			//reset position of argumentlist
 			argpos = 0;
-			//reset seppos
+			//reset sepPos
 			seperatorPosid = 0;
 
 	        //Iterate through a snip 
@@ -418,30 +414,7 @@ int main(int argc, char* argv[])
 					processTask = false;
                 }
                 else if (seperatorid != -1) //process seperator
-                {/*
-					char three[] = {'3', '\0'};
-					char four[] = {'4', '\0'};
-					char five[] = {'5', '\0'};
-					char six[] = {'6', '\0'};
-
-                	//push string to arglist
-					switch(seperatorid)
-					{
-						case 3:
-							t.argumentList[argpos] = three;
-							break;
-						case 4:
-							t.argumentList[argpos] = four;
-							break;
-						case 5:
-							t.argumentList[argpos] = five;
-							break;
-						case 6:
-							t.argumentList[argpos] = six;
-							break;
-					}
-                	argpos++;
-                	t.argumentListSize++;*/
+                {
 					t.seperators.push_back(seperatorid);
 					t.seperatorPos.push_back(seperatorPosid);
                 }
