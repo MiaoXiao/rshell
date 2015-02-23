@@ -9,6 +9,7 @@ rshell is a c++ shell coded using unix. For now, there is only basic shell funct
 * Comment recognition
 * Exit functionality
 * User and host computer recognition
+* Input and output redirection. No piping yet!
 
 Combining multiple functions is possible, of course.
 
