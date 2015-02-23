@@ -461,6 +461,10 @@ int main(int argc, char* argv[])
         fixCommand(command);
 		
 		//check if nothing is entered
+		if (!strcmp(command, "\0")) finishTask = false; 
+
+
+		//check if nothing is entered
 		//if (!strcmp(command, "\0")) finishTask = false; 
 
 	    //Tokenize command

@@ -1,0 +1,483 @@
+Script started on Mon 23 Feb 2015 12:23:25 AM PST
+~
+rfeng001@hammer $ s[Kcs100
+[0;91m
+===============================================================================
+|                                                                             |
+| You have enabled settings specific for cs100.  Everything you do is being   |
+| recorded to measure your progress in the class.                             |
+|                                                                             |
+| Important commands for the class:                                           |
+|   * calcgrade.sh          displays a detailed breakdown of your grade       |
+|   * typespeed             practice typing unix commands                     |
+|                                                                             |
+| Important commands for general C++ programming:                             |
+|   * make                  don't call g++ manually; let make do the work!    |
+|   * gdb                   the GNU debugger                                  |
+|   * valgrind              get rid of your memory leaks                      |
+|   * cppcheck              static analysis tool                              |
+|   * man                   find help about any syscall / terminal command    |
+|                                                                             |
+===============================================================================
+[0m
+[s%%%%%%%%%%[u[0;32mrfeng001[0;36m@[0;32mcs100[0;36m:[0;32m~[0;95m [0;36m$[0m cd rshell[K[K[K[K[K[KCS100
+[s%%%%%%%%%%[u[0;32mrfeng001[0;36m@[0;32mcs100[0;36m:[0;32m~/CS100[0;95m [0;36m$[0m cd rshell
+[s%%%%%%%%%%[u[0;32mrfeng001[0;36m@[0;32mcs100[0;36m:[0;32m~/CS100/rshell[0;95m (redirect) [0;36m$[0m make rhsell[K[K[K[K[Kshell
+mkdir -p ./bin
+g++ -Wall -Werror -ansi -pedantic ./src/main.cpp ./src/Kirb.cpp -o ./bin/rshell
+[s%%%%%%%%%%[u[0;32mrfeng001[0;36m@[0;32mcs100[0;36m:[0;32m~/CS100/rshell[0;95m (redirect) [0;36m$[0m bin/rshell
+rfeng001@hammer.cs.ucr.edu (>'.')> ls > old.text # > on old file
+rfeng001@hammer.cs.ucr.edu (>'.')> cat old.text
+bin
+LICENSE
+listnumbers.txt
+Makefile
+old.text
+old.txt
+README.md
+src
+tests
+rfeng001@hammer.cs.ucr.edu (>'.')> ls > old.txt #  
+rfeng001@hammer.cs.ucr.edu (>'.')> cat old.txt
+bin
+LICENSE
+listnumbers.txt
+Makefile
+old.text
+old.txt
+README.md
+src
+tests
+rfeng001@hammer.cs.ucr.edu (>'.')> ls > newfile.txt # > on newfile
+rfeng001@hammer.cs.ucr.edu (>'.')> cat newfile.txt
+bin
+LICENSE
+listnumbers.txt
+Makefile
+newfile.txt
+old.text
+old.txt
+README.md
+src
+tests
+rfeng001@hammer.cs.ucr.edu (>'.')> ls >> old.txt # >> on old file
+rfeng001@hammer.cs.ucr.edu (>'.')> cat old.txt
+bin
+LICENSE
+listnumbers.txt
+Makefile
+old.text
+old.txt
+README.md
+src
+tests
+bin
+LICENSE
+listnumbers.txt
+Makefile
+newfile.txt
+old.text
+old.txt
+README.md
+src
+tests
+rfeng001@hammer.cs.ucr.edu (>'.')> ls >> newfile2.txt # >> on new file
+rfeng001@hammer.cs.ucr.edu (>'.')> cat newfile2.txt
+bin
+LICENSE
+listnumbers.txt
+Makefile
+newfile2.txt
+newfile.txt
+old.text
+old.txt
+README.md
+src
+tests
+rfeng001@hammer.cs.ucr.edu (>'.')> ls -l -a -la > z.  oldfile    , .txt # multiple        > with multiple arguments
+rfeng001@hammer.cs.ucr.edu (>'.')> cat old.txt
+total 64
+drwx------ 6 rfeng001 classes  4096 Feb 23 00:20 .
+drwx------ 9 rfeng001 classes  4096 Feb 21 21:42 ..
+drwx------ 2 rfeng001 classes  4096 Feb 23 00:19 bin
+drwx------ 8 rfeng001 classes  4096 Feb 23 00:15 .git
+-rw------- 1 rfeng001 classes 18027 Feb 21 21:42 LICENSE
+-rw------- 1 rfeng001 classes    32 Feb 23 00:03 listnumbers.txt
+-rw------- 1 rfeng001 classes   382 Feb 21 21:46 Makefile
+-rw------- 1 rfeng001 classes    99 Feb 23 00:20 newfile2.txt
+-rw------- 1 rfeng001 classes    86 Feb 23 00:20 newfile.txt
+-rw------- 1 rfeng001 classes    74 Feb 23 00:19 old.text
+-rw------- 1 rfeng001 classes     0 Feb 23 00:21 old.txt
+-rw------- 1 rfeng001 classes  2167 Feb 21 21:42 README.md
+drwx------ 2 rfeng001 classes  4096 Feb 23 00:15 src
+drwx------ 2 rfeng001 classes  4096 Feb 23 00:19 tests
+rfeng001@hammer.cs.ucr.edu (>'.')> ls -l -a -la >> z old.txt ##    >> with multiple arguments
+rfeng001@hammer.cs.ucr.edu (>'.')> ls>old.txt #no spaces
+rfeng001@hammer.cs.ucr.edu (>'.')> cat old.txt
+bin
+LICENSE
+listnumbers.txt
+Makefile
+newfile2.txt
+newfile.txt
+old.text
+old.txt
+README.md
+src
+tests
+rfeng001@hammer.cs.ucr.edu (>'.')> ls >old.txt #varied spaces
+rfeng001@hammer.cs.ucr.edu (>'.')> cat old.txt
+bin
+LICENSE
+listnumbers.txt
+Makefile
+newfile2.txt
+newfile.txt
+old.text
+old.txt
+README.md
+src
+tests
+rfeng001@hammer.cs.ucr.edu (>'.')> ls> old.txt  
+rfeng001@hammer.cs.ucr.edu (>'.')> cat old.txt
+bin
+LICENSE
+listnumbers.txt
+Makefile
+newfile2.txt
+newfile.txt
+old.text
+old.txt
+README.md
+src
+tests
+rfeng001@hammer.cs.ucr.edu (>'.')> ls      >   old.txt
+rfeng001@hammer.cs.ucr.edu (>'.')> cat old.txt
+bin
+LICENSE
+listnumbers.txt
+Makefile
+newfile2.txt
+newfile.txt
+old.text
+old.txt
+README.md
+src
+tests
+rfeng001@hammer.cs.ucr.edu (>'.')> ls >>old.txt #varied spaces with >>
+rfeng001@hammer.cs.ucr.edu (>'.')> cat old.txt
+bin
+LICENSE
+listnumbers.txt
+Makefile
+newfile2.txt
+newfile.txt
+old.text
+old.txt
+README.md
+src
+tests
+bin
+LICENSE
+listnumbers.txt
+Makefile
+newfile2.txt
+newfile.txt
+old.text
+old.txt
+README.md
+src
+tests
+rfeng001@hammer.cs.ucr.edu (>'.')> ls>> old.txt  
+rfeng001@hammer.cs.ucr.edu (>'.')> cat old.txt
+bin
+LICENSE
+listnumbers.txt
+Makefile
+newfile2.txt
+newfile.txt
+old.text
+old.txt
+README.md
+src
+tests
+bin
+LICENSE
+listnumbers.txt
+Makefile
+newfile2.txt
+newfile.txt
+old.text
+old.txt
+README.md
+src
+tests
+bin
+LICENSE
+listnumbers.txt
+Makefile
+newfile2.txt
+newfile.txt
+old.text
+old.txt
+README.md
+src
+tests
+rfeng001@hammer.cs.ucr.edu (>'.')> ls -l >   old.txt
+rfeng001@hammer.cs.ucr.edu (>'.')> ls -l >>    old.txt
+rfeng001@hammer.cs.ucr.edu (>'.')> cat old.txt
+total 52
+drwx------ 2 rfeng001 classes  4096 Feb 23 00:19 bin
+-rw------- 1 rfeng001 classes 18027 Feb 21 21:42 LICENSE
+-rw------- 1 rfeng001 classes    32 Feb 23 00:03 listnumbers.txt
+-rw------- 1 rfeng001 classes   382 Feb 21 21:46 Makefile
+-rw------- 1 rfeng001 classes    99 Feb 23 00:20 newfile2.txt
+-rw------- 1 rfeng001 classes    86 Feb 23 00:20 newfile.txt
+-rw------- 1 rfeng001 classes    74 Feb 23 00:19 old.text
+-rw------- 1 rfeng001 classes     0 Feb 23 00:23 old.txt
+-rw------- 1 rfeng001 classes  2167 Feb 21 21:42 README.md
+drwx------ 2 rfeng001 classes  4096 Feb 23 00:15 src
+drwx------ 2 rfeng001 classes  4096 Feb 23 00:19 tests
+total 56
+drwx------ 2 rfeng001 classes  4096 Feb 23 00:19 bin
+-rw------- 1 rfeng001 classes 18027 Feb 21 21:42 LICENSE
+-rw------- 1 rfeng001 classes    32 Feb 23 00:03 listnumbers.txt
+-rw------- 1 rfeng001 classes   382 Feb 21 21:46 Makefile
+-rw------- 1 rfeng001 classes    99 Feb 23 00:20 newfile2.txt
+-rw------- 1 rfeng001 classes    86 Feb 23 00:20 newfile.txt
+-rw------- 1 rfeng001 classes    74 Feb 23 00:19 old.text
+-rw------- 1 rfeng001 classes   647 Feb 23 00:23 old.txt
+-rw------- 1 rfeng001 classes  2167 Feb 21 21:42 README.md
+drwx------ 2 rfeng001 classes  4096 Feb 23 00:15 src
+drwx------ 2 rfeng001 classes  4096 Feb 23 00:19 tests
+rfeng001@hammer.cs.ucr.edu (>'.')> sort <      ls
+bin  LICENSE  listnumbers.txt  Makefile  newfile2.txt  newfile.txt  old.text  old.txt  README.md  src  tests
+rfeng001@hammer.cs.ucr.edu (>'.')> sort < listnumbers.txt #< for sorting a gile    file
+1
+2
+3
+3
+4
+5
+5
+7
+a
+a
+b
+e
+f
+f
+g
+w
+rfeng001@hammer.cs.ucr.edu (>'.')> sort < doesnoteix  xist #< t < and try       on a new  onexisting file         file
+Error with open(): No such file or directory
+sort: open failed: doesnotexist: No such file or directory
+rfeng001@hammer.cs.ucr.edu (>'.')> sort  < list.     listnumbers.txt #varied spaces again
+1
+2
+3
+3
+4
+5
+5
+7
+a
+a
+b
+e
+f
+f
+g
+w
+rfeng001@hammer.cs.ucr.edu (>'.')> sort <listnumbers.txt
+1
+2
+3
+3
+4
+5
+5
+7
+a
+a
+b
+e
+f
+f
+g
+w
+rfeng001@hammer.cs.ucr.edu (>'.')> sort    <     listnumbers.txt
+1
+2
+3
+3
+4
+5
+5
+7
+a
+a
+b
+e
+f
+f
+g
+w
+rfeng001@hammer.cs.ucr.edu (>'.')> sort -n < listnumbers.txt #sort    < with multiple arguments
+a
+a
+b
+e
+f
+f
+g
+w
+1
+2
+3
+3
+4
+5
+5
+7
+rfeng001@hammer.cs.ucr.edu (>'.')> ls > z.txt >> zz.txt           > zz.txt zz  > zzz.txt #multiple >
+rfeng001@hammer.cs.ucr.edu (>'.')> cat zzz.txt
+bin
+LICENSE
+listnumbers.txt
+Makefile
+newfile2.txt
+newfile.txt
+old.text
+old.txt
+README.md
+src
+tests
+z.txt
+zz.txt
+zzz.txt
+rfeng001@hammer.cs.ucr.edu (>'.')> v cat zz.txt ##should       should be empty
+rfeng001@hammer.cs.ucr.edu (>'.')> ls > z.txt > zz.txt >>zzz.txt        zzz.txt #multiple < > and >>
+rfeng001@hammer.cs.ucr.edu (>'.')> cat zzz.txt
+bin
+LICENSE
+listnumbers.txt
+Makefile
+newfile2.txt
+newfile.txt
+old.text
+old.txt
+README.md
+src
+tests
+z.txt
+zz.txt
+zzz.txt
+bin
+LICENSE
+listnumbers.txt
+Makefile
+newfile2.txt
+newfile.txt
+old.text
+old.txt
+README.md
+src
+tests
+z.txt
+zz.txt
+zzz.txt
+rfeng001@hammer.cs.ucr.edu (>'.')> ls >z.txt > z.txt  > z.txt      >> z. z.xt  txt >   z.txt #varied spaces and multiple > and >>
+rfeng001@hammer.cs.ucr.edu (>'.')> cat z.txt
+bin
+LICENSE
+listnumbers.txt
+Makefile
+newfile2.txt
+newfile.txt
+old.text
+old.txt
+README.md
+src
+tests
+z.txt
+zz.txt
+zzz.txt
+rfeng001@hammer.cs.ucr.edu (>'.')> > #only >
+No executable specified
+rfeng001@hammer.cs.ucr.edu (>'.')> > <<< >>      >> > >> < < >> < #many useu less redirections
+No executable specified
+rfeng001@hammer.cs.ucr.edu (>'.')> ls > << #does not work
+Incorrect use of redirection or piping
+rfeng001@hammer.cs.ucr.edu (>'.')> > < > ls #does not work
+Incorrect use of redirection or piping
+rfeng001@hammer.cs.ucr.edu (>'.')> ls >> z.txt <
+Error with open(): Bad address
+z.txt
+rfeng001@hammer.cs.ucr.edu (>'.')> #incorrect use of r piping, but it interprets as lsing z.                               
+rfeng001@hammer.cs.ucr.edu (>'.')> ls > z.txt zz.txt zzz.txt #s using > on , multiple files
+rfeng001@hammer.cs.ucr.edu (>'.')> cat z.txt
+bin
+LICENSE
+listnumbers.txt
+Makefile
+newfile2.txt
+newfile.txt
+old.text
+old.txt
+README.md
+src
+tests
+z.txt
+zz.txt
+zzz.txt
+rfeng001@hammer.cs.ucr.edu (>'.')> cat     cat zz.txt  xt
+rfeng001@hammer.cs.ucr.edu (>'.')> #only works onth   the FIRST file
+rfeng001@hammer.cs.ucr.edu (>'.')> sort <        ls
+bin  LICENSE  listnumbers.txt  Makefile  newfile2.txt  newfile.txt  old.text  old.txt  README.md  src  tests  z.txt  zz.txt  zzz.txt
+rfeng001@hammer.cs.ucr.edu (>'.')> sort < listnumbers.txt > sorted_list           joke_     sorted_list.txt >> best_list.txxt  t #combing   ining < > and >>
+rfeng001@hammer.cs.ucr.edu (>'.')> cat best_list.txt
+1
+2
+3
+3
+4
+5
+5
+7
+a
+a
+b
+e
+f
+f
+g
+w
+rfeng001@hammer.cs.ucr.edu (>'.')> ls < z.txt
+z.txt
+rfeng001@hammer.cs.ucr.edu (>'.')> #redirect         ls    ls
+best_list.txt  LICENSE		Makefile      newfile.txt  old.txt    sorted_list.txt  tests  zz.txt
+bin	       listnumbers.txt	newfile2.txt  old.text	   README.md  src	       z.txt  zzz.txt
+rfeng001@hammer.cs.ucr.edu (>'.')> g g++ src/errorprogram                    ls src
+errorprogram.cpp  Kirb.cpp  Kirb.h  ls.cpp  main.cpp
+rfeng001@hammer.cs.ucr.edu (>'.')> g++ errorprogram.xpp 2>      cpp 2> errors.txt #redirect errors
+rfeng001@hammer.cs.ucr.edu (>'.')> cat errors.txt
+g++: error: errorprogram.cpp: No such file or directory
+g++: fatal error: no input files
+compilation terminated.
+rfeng001@hammer.cs.ucr.edu (>'.')> g++ errorprogram.cpp 2>> errors.txt #redirect errors with >> instead of >
+rfeng001@hammer.cs.ucr.edu (>'.')> cat errors.txt
+g++: error: errorprogram.cpp: No such file or directory
+g++: fatal error: no input files
+compilation terminated.
+g++: error: errorprogram.cpp: No such file or directory
+g++: fatal error: no input files
+compilation terminated.
+rfeng001@hammer.cs.ucr.edu (>'.')> exit
+[s%%%%%%%%%%[u[0;32mrfeng001[0;36m@[0;32mcs100[0;36m:[0;32m~/CS100/rshell[0;95m (redirect) [0;36m$[0m exit
+exit
+~
+rfeng001@hammer $ exit
+exit
+
+Script done on Mon 23 Feb 2015 12:38:16 AM PST
