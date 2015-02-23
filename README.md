@@ -82,7 +82,8 @@ To clean the bin file if you want to recompile rshell or ls:
 ##Bugs
 Future bugs will be documented here.
 
-* In main.cpp. adding tabs in a command might make executables that should pass, fail.
+* In main.cpp, adding tabs in a command might make executables that should pass, fail.
+* In main.cpp, adding only spaces without any executable may cause the shell to stall.
 
 ##Limitations
 Limitations of rshell.
