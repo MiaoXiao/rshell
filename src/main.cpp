@@ -92,6 +92,31 @@ void closeCheck(const int fd)
 	}
 }
 
+//check to see if we should working directory
+//returns true if cd, false otherwise
+//updates status to determine if success or not
+bool checkCd(const task t, int &status)
+{
+	char* cd = t.argumentList[0];
+	char* path = t.argumentList[1];
+	if (!strcmp(cd, "cd"))
+	{
+		if (path == '\0')
+		{
+			cout << "No path specified" << endl;
+			status = 1;
+		}
+		else if (chdir(path) == -1)
+		{
+			perror("Problem with chdir()");
+			status = 1;
+		}
+		else status = 0;
+		return true;
+	}
+	return false;
+}
+
 //run all commands 
 void runCommand(vector<task> taskList, Kirb &K)
 {
@@ -114,6 +139,8 @@ void runCommand(vector<task> taskList, Kirb &K)
 		bool redirection = !taskList[i].seperators.empty();
 		//check for kirb executable
 		if (!strcmp(taskList[i].argumentList[0], "kirb")) K.selectCommand(taskList[i].argumentList, status);
+		//check cd
+		else if (checkCd(taskList[i], status)) {}		
 		//if either a connector, OR
 		//no connector AND no seperators, OR
 		//the next next position in arglist is not NULL
@@ -128,7 +155,7 @@ void runCommand(vector<task> taskList, Kirb &K)
 				for(unsigned j = 0; j < taskList[i].seperatorPos.size(); ++j)
 				{
 					sepPos = taskList[i].seperatorPos[j];
-				//	cout << "seperator: " << taskList[i].seperators[j] << endl;
+					//cout << "seperator: " << taskList[i].seperators[j] << endl;
 					switch(taskList[i].seperators[j])
 					{
 						case 7:
@@ -156,17 +183,6 @@ void runCommand(vector<task> taskList, Kirb &K)
 					writeto.push_back(w);
 				}
 			}
-			
-			/*//set up files for piping
-			int rw[2];
-			if (pipe(rw) == -1)
-			{
-				perror("There was an error with pipe()");
-				exit(1);
-			}
-			writeto.push_back(rw[0]);
-			writeto.push_back(rw[1]);
-			*/
 
 			//start forking process
 			int pid = fork();
@@ -209,12 +225,6 @@ void runCommand(vector<task> taskList, Kirb &K)
 								taskList[i].argumentList[sepPos + 1] = '\0';
 								break;
 							case 6: // |
-							/*
-								closeCheck(1);
-								closeCheck(rw[1]);
-								dupCheck(rw[0], 1);
-								taskList[i].argumentList[sepPos] = '\0';
-								*/
 								break;
 						}
 					}
@@ -230,44 +240,6 @@ void runCommand(vector<task> taskList, Kirb &K)
 			{
 				if (waitpid(pid, &status, 0) == -1)	perror("Error with waitpid");
 				
-				/*
-				for (unsigned j = 0; j < taskList[i].seperatorPos.size(); ++j)
-				{
-					//if piping, fork a second time
-					if (taskList[i].seperators[j] == 6)
-					{
-						sepPos = taskList[i].seperatorPos[j];
-						pid = fork();
-						if (pid <= -1) //error
-						{
-							perror("There was an error with fork()");
-							exit(1);
-						}
-						else if (pid == 0) //second child
-						{
-							closeCheck(0);
-							closeCheck(rw[0]);
-							dupCheck(rw[1], 0);
-						
-							//test, fill new arg list
-							char* newarglist[MEMORY];
-							newarglist[0] = taskList[i].argumentList[sepPos];
-							newarglist[1] = '\0';
-
-							//try to run the executable/arguments
-							if (execvp(taskList[i].argumentList[sepPos], newarglist) == -1)
-								perror("There was an error with the executable or argument list");
-							
-							exit(1);
-						}
-						else //second parent
-						{
-							if (waitpid(pid, &status, 0) == -1)	perror("Error with waitpid");
-						}
-					}
-				
-				}
-*/	
 				//close all used fds, including any pipes
 				if (redirection)
 					for(unsigned j = 0; j < writeto.size(); ++j) closeCheck(writeto[j]);
@@ -459,17 +431,14 @@ int main(int argc, char* argv[])
 
         //partition command, add any necessary spaces to separate statements
         fixCommand(command);
-		
 		//check if nothing is entered
 		if (!strcmp(command, "\0")) finishTask = false; 
 
-
 		//check if nothing is entered
 		//if (!strcmp(command, "\0")) finishTask = false; 
-
 	    //Tokenize command
 	    snip = strtok(command, "\t ");
-	
+		
 		//iterate through the entire command
 		while (finishTask)
 		{
