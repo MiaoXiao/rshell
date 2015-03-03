@@ -421,9 +421,25 @@ int main(int argc, char* argv[])
 		taskList.clear();
 		finishTask = true;
         argpos = 0;
+		
+		//get cwd
+		string cwd(get_current_dir_name());
+		string finalcwd;
+		//only get last 2 paths
+		int j = 0;
+		for (int i = cwd.size(); i > 0; i--)
+		{
+			finalcwd += cwd[i];
+			if(cwd[i] == '/')
+			{
+				j++;	
+				if (j == 2) i = 0;
+			}
+		}
+		finalcwd = string(finalcwd.rbegin(), finalcwd.rend());
 
 	    //Retrieve command
-	    cout << user << "@" << host << " " << K.displayExpression() << " ";
+	    cout << user << "@" << host << ": " << finalcwd << " " << K.displayExpression() << " ";
 	    cin.getline(command, MEMORY);
 
 		//check if nothing is entered
