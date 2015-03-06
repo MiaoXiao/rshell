@@ -7,6 +7,7 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <csignal>
 #include <queue>
 #include "Kirb.h"
 
@@ -383,8 +384,17 @@ void displayCharArray(char* a[])
         cout << i << ": " << a[i] << endl;
 }
 
+//handle signals
+void signalHandle(int signal)
+{
+	//cout << "\n" << endl;
+}
+
 int main(int argc, char* argv[])
 {
+	//catch signals
+	signal(SIGINT, signalHandle);
+
     //info for login and host
     char* host = (char*)malloc(300);
     string user;
@@ -438,6 +448,7 @@ int main(int argc, char* argv[])
 		}
 		finalcwd = string(finalcwd.rbegin(), finalcwd.rend());
 
+		cout.flush();
 	    //Retrieve command
 	    cout << user << "@" << host << ": " << finalcwd << " " << K.displayExpression() << " ";
 	    cin.getline(command, MEMORY);
@@ -473,6 +484,8 @@ int main(int argc, char* argv[])
                 connectorid = checkConnector(snip);
                 seperatorid = checkSeperator(snip);
 
+
+
 				//process executable/arguments
                 if (connectorid == -1 && seperatorid == -1) 
                 {
@@ -482,6 +495,7 @@ int main(int argc, char* argv[])
 						free(host);
 						exit(1);
 					}
+
                     t.argumentList[argpos] = snip;
                     t.argumentListSize++;
                     argpos++;
