@@ -134,6 +134,11 @@ void runCommand(vector<task> taskList, Kirb &K)
 
 	//get enviornment variables
 	char *env = getenv("PATH");
+	if (env == NULL)
+	{
+		perror("problem with getenv");
+		exit(1);
+	}
 	char pathList[50000];
 	sprintf(pathList, "PATH=%s", env);
 	char *finalPath[] = {pathList, NULL};
@@ -400,7 +405,11 @@ void signalHandle(int signal)
 int main(int argc, char* argv[])
 {
 	//catch signals
-	signal(SIGINT, signalHandle);
+	if(signal(SIGINT, signalHandle) == SIG_ERR)
+	{
+		perror("problem with signal");
+		exit(1);
+	}
 
     //info for login and host
     char* host = (char*)malloc(300);
