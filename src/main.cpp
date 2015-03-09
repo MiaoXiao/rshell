@@ -131,6 +131,13 @@ void runCommand(vector<task> taskList, Kirb &K)
 	int sepPos;
 	//will be false if tasks processing should halt
 	bool continueTask = true;
+
+	//get enviornment variables
+	char *env = getenv("PATH");
+	char pathList[50000];
+	sprintf(pathList, "PATH=%s", env);
+	char *finalPath[] = {pathList, NULL};
+
 	//loop through and process every task
 	for (unsigned i = 0; i < taskList.size() && continueTask && taskList[i].argumentList[0] != '\0'; ++i)
 	{
@@ -232,7 +239,7 @@ void runCommand(vector<task> taskList, Kirb &K)
 				}
 
 				//try to run the executable/arguments
-				if (execvp(taskList[i].argumentList[0], taskList[i].argumentList) == -1)
+				if (execvpe(taskList[i].argumentList[0], taskList[i].argumentList, finalPath) == -1)
 					perror("There was an error with the executable or argument list");
 
 				exit(1);
@@ -433,7 +440,13 @@ int main(int argc, char* argv[])
         argpos = 0;
 		
 		//get cwd
-		string cwd(get_current_dir_name());
+		char* freethis = get_current_dir_name(); 
+		if (freethis == NULL)
+		{
+			perror("Problem with get_current_dir_name()");
+			exit(1);
+		}
+		string cwd(freethis);
 		string finalcwd;
 		//only get last 2 paths
 		int j = 0;
@@ -450,8 +463,11 @@ int main(int argc, char* argv[])
 
 		cout.flush();
 	    //Retrieve command
-	    cout << user << "@" << host << ": " << finalcwd << " " << K.displayExpression() << " ";
+	    cout << user << "@" << host << ": ~" << finalcwd << " " << K.displayExpression() << " ";
 	    cin.getline(command, MEMORY);
+		
+		free(freethis);
+
 
 		//check if nothing is entered
 		if (!strcmp(command, "\0")) finishTask = false; 
@@ -483,8 +499,6 @@ int main(int argc, char* argv[])
                 //get ids for connector and seperator
                 connectorid = checkConnector(snip);
                 seperatorid = checkSeperator(snip);
-
-
 
 				//process executable/arguments
                 if (connectorid == -1 && seperatorid == -1) 
